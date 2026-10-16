@@ -1,0 +1,31 @@
+# Group 8 — pinned environment for the released runs.
+#
+# Python 3.12.13 (see .python-version)
+#
+# The four pins below are the versions reported in Section 4.5 of the
+# manuscript. They are exact pins, not minimums, because they are load
+# bearing: xgboost 3.4.1 shifts predicted probabilities enough to move the
+# screening threshold from 0.0833 to 0.0524 while recall barely changes.
+# The selection rule takes the largest threshold clearing the recall target,
+# so it sits on a knife edge. Do not relax these.
+
+xgboost==3.3.0
+scikit-learn==1.8.0
+imbalanced-learn==0.14.2
+
+# Remaining direct dependencies. Freeze these from a clean install that
+# reproduces the acceptance gate, then replace the lines below with the
+# exact versions:
+#
+#   python -m venv .venv && source .venv/bin/activate
+#   pip install -r requirements.txt
+#   python acceptance_gate.py          # must pass
+#   pip freeze > requirements.lock.txt
+
+numpy
+pandas
+scipy
+shap
+matplotlib
+pyarrow
+openpyxl
