@@ -1,0 +1,51 @@
+# ---------------------------------------------------------------------------
+# Group 8 — release ignore list
+#
+# Anything listed here is either personal data, institutional data, or a
+# re-derivable artefact. Nothing below may be committed, including to a
+# private repository: a file committed once stays in the history.
+# ---------------------------------------------------------------------------
+
+# --- Institutional student records (3,325 students) ------------------------
+
+model_ready_dataset*
+data_local/
+
+# --- Educator study: responses, coding, reconciliation ---------------------
+
+*_consensus.csv
+THEMATIC_ANALYSIS*.md
+
+# --- Individual-level outputs from the source institution -------------------
+# These hold one row per student with the outcome and fee payment status.
+# De-identified, but still individual-level institutional data. Keep local
+# unless your ethics approval covers deposit. The acceptance gate reads them
+# from disk and will report SKIP in CI, which is the intended behaviour.
+seed42_predictions.csv
+source_subgroup_table.csv
+source_operating_point_per_seed.csv
+
+# --- Model artefacts and caches (re-derivable from the scripts) ------------
+*.pkl
+*_model_bundle*
+
+# --- OULAD raw download ----------------------------------------------------
+# Public (CC BY 4.0) but large. The scripts fetch it; see README.
+oulad/
+studentInfo.csv
+studentAssessment.csv
+studentVle.csv
+assessments.csv
+
+# --- Figures: commit the final exports only, not working versions ----------
+*_draft.png
+*_wip.*
+
+# --- Python / Jupyter ------------------------------------------------------
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+.env
+.DS_Store
