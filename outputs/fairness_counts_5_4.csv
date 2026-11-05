@@ -1,0 +1,11 @@
+attribute,group,configuration,tau,n_at_risk,n_at_risk_flagged,n_not_at_risk,n_not_at_risk_flagged,recall,fpr
+gender,Female,pruned,0.0755,45,26,244,40,0.5778,0.1639
+gender,Male,pruned,0.0755,68,47,308,45,0.6912,0.1461
+gender,Female,deployed,0.0833,45,27,244,35,0.6,0.1434
+gender,Male,deployed,0.0833,68,49,308,46,0.7206,0.1494
+fee_status,Paid,pruned,0.0755,19,6,276,21,0.3158,0.0761
+fee_status,Partial,pruned,0.0755,27,13,197,32,0.4815,0.1624
+fee_status,Unpaid,pruned,0.0755,67,54,79,32,0.806,0.4051
+fee_status,Paid,deployed,0.0833,19,8,276,34,0.4211,0.1232
+fee_status,Partial,deployed,0.0833,27,14,197,28,0.5185,0.1421
+fee_status,Unpaid,deployed,0.0833,67,54,79,19,0.806,0.2405

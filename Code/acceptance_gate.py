@@ -2,7 +2,7 @@
 Acceptance gate for the Group 8 release. Run this against the released outputs
 BEFORE you tag the commit you cite in the manuscript.
 
-Every figure below is quoted from GROUP8_MANUSCRIPT_D6.docx. If an assertion
+Every figure below is quoted from GROUP8_MANUSCRIPT_D8.docx. If an assertion
 fails, either the released run does not reproduce the paper or the paper is
 wrong. Both are things to find now rather than in review.
 
@@ -63,6 +63,12 @@ def paired(df, a, b, seeds):
     return float((x[COL_AUC].values - y[COL_AUC].values).mean())
 
 
+def paired_diffs(df, a, b, seeds):
+    p = df[df[COL_SEED].isin(seeds)].pivot_table(
+        index=COL_SEED, columns=COL_CONFIG, values=COL_AUC)
+    return (p[a] - p[b]).values
+
+
 def cronbach(df):
     df = df.dropna()
     k = df.shape[1]
@@ -107,6 +113,18 @@ try:
           0.852)
     check("5.13     transferable 9-col, 20-split", mean_over(ps, "transfer9", SPLITS20), 0.851)
     check("5.2      pruned, five-seed mean",       mean_over(ps, "pruned", SEEDS5),     0.880)
+
+    # TOST against the pre-specified delta = 0.01 AUC bound (Sections 4.6, 4.11).
+    # D8 reports t(19) = -5.84 and t(19) = 0.29. The fix guide's sample said 0.28
+    # for the second; D8 says 0.29 in both places it appears, and the guide's own
+    # rule is that the gate takes the number printed in D8.
+    dd = paired_diffs(ps, "pruned", "full", SPLITS20)
+    se = dd.std(ddof=1) / np.sqrt(len(dd))
+    check("4.6      TOST t(19), upper bound", float((dd.mean() - 0.01) / se), -5.84, 0.02)
+
+    dd2 = paired_diffs(ps, "pruned", "deployed", SPLITS20)
+    se2 = dd2.std(ddof=1) / np.sqrt(len(dd2))
+    check("4.11     TOST t(19), fairness screen", float((dd2.mean() - 0.01) / se2), 0.29, 0.02)
 except Exception as e:
     block_skipped("per-seed metrics unreadable", e)
 
@@ -149,7 +167,8 @@ try:
     d = piv["finetuned"] - piv["scratch"]
     check("5.13     mean benefit across all cells", float(d.mean()), -0.0074, 0.0006)
     check("5.13     negative cells out of 30", float(int((d < 0).sum())), 29.0, 0.5)
-    for b, want in [(100, -0.0117), (1000, -0.0060), (2500, -0.0051), (5000, -0.0098)]:
+    for b, want in [(100, -0.0117), (250, -0.0058), (500, -0.0060),
+                    (1000, -0.0060), (2500, -0.0051), (5000, -0.0098)]:
         check(f"5.13     per-budget benefit at {b}",
               float(d.xs(b, level="budget").mean()), want, 0.0006)
     check("5.13     from-scratch at 100 records",
@@ -251,13 +270,16 @@ try:
     chi2 = (abs(b - c) - 1) ** 2 / (b + c) if (b + c) else 0.0
     check("5.12     McNemar chi-square", float(chi2), 0.08, 0.006)
 
-    gp24, _ = eo_gap(o42["y_true"], o42["proba_pruned"], o42["imd_band"], 0.4416)
-    gc23, _ = eo_gap(o42["y_true"], o42["proba_cand"],   o42["imd_band"], 0.4533)
+    # M1: tau is selected on a 25% validation split of the training partition
+    # (Section 4.4), not on the test set. The old 0.4416 / 0.4533 were test-set
+    # values and audit at the wrong operating point.
+    gp24, _ = eo_gap(o42["y_true"], o42["proba_pruned"], o42["imd_band"], 0.4719)
+    gc23, _ = eo_gap(o42["y_true"], o42["proba_cand"],   o42["imd_band"], 0.4874)
     check("5.12     OULAD EO gap, 24-col pruned", gp24, 0.119, 0.0015)
     check("5.12     OULAD EO gap, 23-col candidate", gc23, 0.160, 0.0015)
     check("5.12     OULAD EO change (removal rejected)", gc23 - gp24, 0.041, 0.0015)
     (passes if gc23 > gp24 else fails).append(
-        f"{'5.12     Algorithm S1 line 12 rejects removal':54s} "
+        f"{'5.12     Algorithm 1 line 12 rejects removal':54s} "
         f"{gp24:.3f} -> {gc23:.3f}")
 except Exception as e:
     block_skipped("5.12     OULAD replication outputs unreadable", e)

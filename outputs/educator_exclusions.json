@@ -1,0 +1,17 @@
+{
+  "excluded_participant_ids": [
+    "P07",
+    "P09"
+  ],
+  "excluded_from_condition": "predictions_only",
+  "reason": "open-text responses identified as duplicated boilerplate",
+  "identified": "post hoc, after reading the responses (Section 4.10)",
+  "effect": "n falls from 19 and 20 to 17 and 20",
+  "retest": {
+    "trust_U": 277.0,
+    "trust_p": 0.001,
+    "trust_r": 0.63,
+    "intervention_quality_p": 0.364
+  },
+  "reported_in": "Section 5.10"
+}

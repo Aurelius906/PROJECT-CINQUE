@@ -1,0 +1,479 @@
+{
+  "Table 1  full 20-split mean AUC": {
+    "got": 0.868,
+    "paper": 0.868,
+    "differs": false
+  },
+  "Table 1  full 20-split SD": {
+    "got": 0.018,
+    "paper": null,
+    "differs": false
+  },
+  "Table 1  pruned 20-split mean AUC": {
+    "got": 0.871,
+    "paper": 0.871,
+    "differs": false
+  },
+  "Table 1  pruned 20-split SD": {
+    "got": 0.016,
+    "paper": null,
+    "differs": false
+  },
+  "Table 1  deployed 20-split mean AUC": {
+    "got": 0.861,
+    "paper": 0.861,
+    "differs": false
+  },
+  "Table 1  deployed 20-split SD": {
+    "got": 0.021,
+    "paper": null,
+    "differs": false
+  },
+  "4.6/5.2  paired diff pruned-full": {
+    "got": 0.0034,
+    "paper": 0.0034,
+    "differs": false
+  },
+  "4.6/5.2  95% CI low": {
+    "got": 0.001,
+    "paper": 0.0011,
+    "differs": true
+  },
+  "4.6/5.2  95% CI high": {
+    "got": 0.0058,
+    "paper": 0.0057,
+    "differs": true
+  },
+  "4.6/5.2  TOST t(19) upper": {
+    "got": -5.84,
+    "paper": -6.01,
+    "differs": true
+  },
+  "4.10     SD of 20 paired differences": {
+    "got": 0.0051,
+    "paper": 0.0049,
+    "differs": true
+  },
+  "4.11     paired diff pruned-deployed": {
+    "got": 0.0106,
+    "paper": 0.0106,
+    "differs": false
+  },
+  "4.11     95% CI low": {
+    "got": 0.0062,
+    "paper": 0.0062,
+    "differs": false
+  },
+  "4.11     95% CI high": {
+    "got": 0.0151,
+    "paper": 0.0151,
+    "differs": false
+  },
+  "4.11     TOST p": {
+    "got": 0.614,
+    "paper": 0.614,
+    "differs": false
+  },
+  "4.11     deployed seed-42 single split": {
+    "got": 0.852,
+    "paper": 0.852,
+    "differs": false
+  },
+  "5.2      pruned five-seed mean": {
+    "got": 0.88,
+    "paper": 0.88,
+    "differs": false
+  },
+  "Table 1  macro-F1 full": {
+    "got": 0.788,
+    "paper": 0.788,
+    "differs": false
+  },
+  "Table 1  macro-F1 pruned": {
+    "got": 0.792,
+    "paper": 0.792,
+    "differs": false
+  },
+  "Table 1  macro-F1 deployed": {
+    "got": 0.786,
+    "paper": 0.786,
+    "differs": false
+  },
+  "4.4      tau (pruned)": {
+    "got": 0.0755,
+    "paper": 0.0755,
+    "differs": false
+  },
+  "4.4      tau (deployed)": {
+    "got": 0.0833,
+    "paper": 0.0833,
+    "differs": false
+  },
+  "5.6      deployed TP at tau": {
+    "got": 76.0,
+    "paper": 76,
+    "differs": false
+  },
+  "5.6      deployed FP at tau": {
+    "got": 81.0,
+    "paper": 81,
+    "differs": false
+  },
+  "5.6      baseline TP at 0.5": {
+    "got": 62.0,
+    "paper": 62,
+    "differs": false
+  },
+  "5.6      baseline FP at 0.5": {
+    "got": 22.0,
+    "paper": 22,
+    "differs": false
+  },
+  "5.6 ADD  deployed TP at 0.5": {
+    "got": 60.0,
+    "paper": null,
+    "differs": false
+  },
+  "5.6 ADD  deployed FP at 0.5": {
+    "got": 21.0,
+    "paper": null,
+    "differs": false
+  },
+  "5.2      5x5 CV full": {
+    "got": 0.864,
+    "paper": 0.865,
+    "differs": true
+  },
+  "5.2      5x5 CV pruned": {
+    "got": 0.868,
+    "paper": 0.869,
+    "differs": true
+  },
+  "5.2      5x5 CV deployed": {
+    "got": 0.858,
+    "paper": 0.858,
+    "differs": false
+  },
+  "4.2      AUC of summed module score alone": {
+    "got": 0.216,
+    "paper": 0.784,
+    "differs": true
+  },
+  "4.2      depth-2 tree on score columns": {
+    "got": 0.746,
+    "paper": 0.76,
+    "differs": true
+  },
+  "4.2      deployed minus all score columns": {
+    "got": 0.839,
+    "paper": 0.839,
+    "differs": false
+  },
+  "4.2      Spearman rho fee vs module views": {
+    "got": 0.284,
+    "paper": 0.284,
+    "differs": false
+  },
+  "4.2      rho 95% CI low": {
+    "got": 0.251,
+    "paper": 0.253,
+    "differs": true
+  },
+  "4.2      rho 95% CI high": {
+    "got": 0.317,
+    "paper": 0.315,
+    "differs": true
+  },
+  "4.2      Kruskal-Wallis H": {
+    "got": 315.4,
+    "paper": 315.4,
+    "differs": false
+  },
+  "4.2      Spearman rho fee vs n_logins": {
+    "got": 0.145,
+    "paper": 0.145,
+    "differs": false
+  },
+  "4.2      Spearman rho fee vs engagement_span_days": {
+    "got": 0.093,
+    "paper": 0.093,
+    "differs": false
+  },
+  "4.6      gain: columns retained": {
+    "got": 31.0,
+    "paper": 31,
+    "differs": false
+  },
+  "4.6      gain: overlap with SHAP set": {
+    "got": 24.0,
+    "paper": 24,
+    "differs": false
+  },
+  "4.6      gain: Jaccard": {
+    "got": 0.686,
+    "paper": 0.686,
+    "differs": false
+  },
+  "4.6      total_gain: columns retained": {
+    "got": 24.0,
+    "paper": 24,
+    "differs": false
+  },
+  "4.6      total_gain: overlap with SHAP set": {
+    "got": 23.0,
+    "paper": 23,
+    "differs": false
+  },
+  "4.6      total_gain: Jaccard": {
+    "got": 0.793,
+    "paper": 0.793,
+    "differs": false
+  },
+  "4.6      weight: columns retained": {
+    "got": 29.0,
+    "paper": 29,
+    "differs": false
+  },
+  "4.6      weight: overlap with SHAP set": {
+    "got": 26.0,
+    "paper": 26,
+    "differs": false
+  },
+  "4.6      weight: Jaccard": {
+    "got": 0.839,
+    "paper": 0.839,
+    "differs": false
+  },
+  "4.6/5.2  gain-pruned five-seed mean": {
+    "got": 0.8712,
+    "paper": 0.8712,
+    "differs": false
+  },
+  "4.6/5.2  SHAP minus gain, mean": {
+    "got": 0.009,
+    "paper": 0.009,
+    "differs": false
+  },
+  "4.6/5.2  t(4)": {
+    "got": 2.2,
+    "paper": 2.2,
+    "differs": false
+  },
+  "4.6/5.2  p": {
+    "got": 0.093,
+    "paper": 0.093,
+    "differs": false
+  },
+  "4.7      sensitivity full": {
+    "got": 0.882,
+    "paper": 0.882,
+    "differs": false
+  },
+  "4.7      sensitivity pruned": {
+    "got": 0.883,
+    "paper": 0.88,
+    "differs": false
+  },
+  "4.7      sensitivity deployed": {
+    "got": 0.875,
+    "paper": 0.871,
+    "differs": true
+  },
+  "4.7      pruned-full diff": {
+    "got": 0.0005,
+    "paper": -0.0024,
+    "differs": true
+  },
+  "4.7      pruned-deployed diff": {
+    "got": 0.0083,
+    "paper": 0.0089,
+    "differs": true
+  },
+  "4.7      full-deployed diff (write as full minus deployed)": {
+    "got": 0.0077,
+    "paper": 0.0113,
+    "differs": true
+  },
+  "5.4      gender EO gap, seed 42, deployed at tau": {
+    "got": 0.121,
+    "paper": 0.121,
+    "differs": false
+  },
+  "5.5      gender EO gap, 20-split mean, deployed at per-split tau": {
+    "got": 0.053,
+    "paper": 0.024,
+    "differs": true
+  },
+  "5.5      fee EO gap, seed 42, pruned at tau (same basis as 0.121)": {
+    "got": 0.49,
+    "paper": 0.49,
+    "differs": false
+  },
+  "5.7      complete-record n": {
+    "got": 3089.0,
+    "paper": 3089,
+    "differs": false
+  },
+  "5.7      deployed": {
+    "got": 0.757,
+    "paper": 0.757,
+    "differs": false
+  },
+  "5.7      retuned_smote": {
+    "got": 0.791,
+    "paper": 0.781,
+    "differs": true
+  },
+  "5.7      retuned_weighted": {
+    "got": 0.801,
+    "paper": 0.799,
+    "differs": true
+  },
+  "5.7      logreg": {
+    "got": 0.8,
+    "paper": 0.8,
+    "differs": false
+  },
+  "5.7      retuned_smote - deployed": {
+    "got": 0.0341,
+    "paper": 0.0238,
+    "differs": true
+  },
+  "5.7      weighted - retuned_smote": {
+    "got": 0.0102,
+    "paper": 0.0183,
+    "differs": true
+  },
+  "6.7      depth-3 tree, unpaid vs paid AUC": {
+    "got": 0.716,
+    "paper": 0.712,
+    "differs": true
+  },
+  "6.7      three-level balanced accuracy": {
+    "got": 0.439,
+    "paper": 0.46,
+    "differs": true
+  },
+  "5.14     fit seconds, full": {
+    "got": 2.69,
+    "paper": 3.19,
+    "differs": true
+  },
+  "5.14     fit seconds, pruned": {
+    "got": 2.03,
+    "paper": 1.93,
+    "differs": true
+  },
+  "5.14     fit seconds, deployed": {
+    "got": 1.51,
+    "paper": 1.89,
+    "differs": true
+  },
+  "5.14     peak allocation MB (deployed fit)": {
+    "got": 2.8,
+    "paper": 3.3,
+    "differs": true
+  },
+  "5.14     inference microseconds per record": {
+    "got": 11.4,
+    "paper": 9.8,
+    "differs": true
+  },
+  "5.14     SHAP ms per record": {
+    "got": 0.76,
+    "paper": 0.73,
+    "differs": true
+  },
+  "6.8      26 minus 25 (no total_score)": {
+    "got": 0.0012,
+    "paper": 0.0012,
+    "differs": false
+  },
+  "6.8      TOST p": {
+    "got": 0.005,
+    "paper": 0.005,
+    "differs": false
+  },
+  "_environment": {
+    "python": "3.13.18",
+    "xgboost": "3.4.1",
+    "sklearn": "1.6.1",
+    "imblearn": "0.14.2",
+    "params": {
+      "n_estimators": 300,
+      "max_depth": 8,
+      "learning_rate": 0.1,
+      "subsample": 0.8,
+      "objective": "binary:logistic",
+      "eval_metric": "auc",
+      "random_state": 42
+    },
+    "pruned_cols": [
+      "n_module_views",
+      "n_logins",
+      "fee_payment_status_Paid",
+      "score_m2",
+      "modules_incomplete",
+      "score_m6",
+      "score_m4",
+      "total_score",
+      "score_improvement",
+      "score_m3",
+      "total_quiz_time_mins",
+      "n_course_views",
+      "engagement_span_days",
+      "score_m5",
+      "n_quiz_reviews",
+      "avg_quiz_duration_mins",
+      "fee_payment_status_Unpaid",
+      "std_module_score",
+      "programme_Actuarial Science",
+      "total_attempts",
+      "gender_Female",
+      "score_m1",
+      "attempts_m3",
+      "avg_attempts_per_module",
+      "n_grade_views",
+      "attempts_m1",
+      "programme_Computer Science",
+      "pct_web_access"
+    ],
+    "deployed_cols": [
+      "n_module_views",
+      "n_logins",
+      "score_m2",
+      "modules_incomplete",
+      "score_m6",
+      "score_m4",
+      "total_score",
+      "score_improvement",
+      "score_m3",
+      "total_quiz_time_mins",
+      "n_course_views",
+      "engagement_span_days",
+      "score_m5",
+      "n_quiz_reviews",
+      "avg_quiz_duration_mins",
+      "std_module_score",
+      "programme_Actuarial Science",
+      "total_attempts",
+      "gender_Female",
+      "score_m1",
+      "attempts_m3",
+      "avg_attempts_per_module",
+      "n_grade_views",
+      "attempts_m1",
+      "programme_Computer Science",
+      "pct_web_access"
+    ],
+    "tau": {
+      "pruned": 0.07547499984502792,
+      "deployed": 0.08333387970924377
+    },
+    "defaults": {
+      "tree_method": "not set; XGBoost 3.4.1 resolves auto to the histogram algorithm (grow_quantile_histmaker) on CPU",
+      "device": "not set; resolves to cpu",
+      "verified_from": "booster save_config() of the release bundle"
+    }
+  }
+}

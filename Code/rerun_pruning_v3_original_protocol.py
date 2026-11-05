@@ -13,7 +13,7 @@ Pipeline (as recorded):
      McNemar equivalence test, ROC curves, SHAP summary, threshold selection
   5. Saves: metrics CSV, ROC/SHAP figures + arrays, new locked bundle
 
-Run in Colab or locally:  python rerun_pruning.py
+Run in Colab or locally:  python rerun_pruning_v3_original_protocol.py
 Requires: xgboost, scikit-learn, pandas, numpy, matplotlib, joblib
           (shap NOT required — uses XGBoost's native pred_contribs)
 """
@@ -152,6 +152,10 @@ summary.to_csv(f"{OUT_PREFIX}_metrics_summary.csv")
 # ----------------------------------------------------------------------------
 yh_full   = (seed42_probs["full_43"] >= 0.5).astype(int)
 yh_pruned = (seed42_probs["pruned"]  >= 0.5).astype(int)
+# CORRECTNESS discordance (Dietterich, 1998), the standard McNemar for comparing
+# two classifiers: b = right by full and wrong by pruned, c = the reverse. This is
+# NOT prediction discordance (flagged by one and not the other), which gives
+# different counts. Sections 4.6, 5.2, 5.12, Table 1 and Table S5 report this one.
 b = int(((yh_full == yte42.values) & (yh_pruned != yte42.values)).sum())
 c = int(((yh_full != yte42.values) & (yh_pruned == yte42.values)).sum())
 chi2_stat = (abs(b - c) - 1) ** 2 / (b + c) if (b + c) > 0 else 0.0   # continuity-corrected
@@ -160,6 +164,14 @@ print(f"\n[McNemar] discordant pairs b={b}, c={c}, chi2={chi2_stat:.3f}, p={p_mc
 
 # ----------------------------------------------------------------------------
 # 5. FAIRNESS: equal-opportunity gap by fee status (deployed vs pruned)
+#
+# SUPERSEDED: this section audits the fee gap at the DEFAULT 0.5 threshold
+# (eo_gap's thresh=0.5 default below). Section 5.4 reports the gaps at each
+# configuration's own screening threshold: tau = 0.0755 (pruned) and
+# tau = 0.0833 (deployed), which give 0.490 and 0.385. acceptance_gate.py
+# block 2 checks those values. The figures printed here are retained for
+# provenance only and are stored under a key named so that no reader takes
+# them as reported (see the bundle meta in section 9).
 # ----------------------------------------------------------------------------
 fee_raw = df.loc[Xte42.index, "fee_payment_status"]
 def eo_gap(probs, thresh=0.5):
@@ -230,9 +242,18 @@ ax.legend(loc="lower right", fontsize=8, frameon=True)
 ax.spines[["top", "right"]].set_visible(False)
 fig.savefig(f"{OUT_PREFIX}_FIG4_roc.png", bbox_inches="tight", dpi=300); plt.close()
 
-dm_dep = xgb.DMatrix(Xte42[deployed_cols], feature_names=deployed_cols)
+# FIX: the deployed model is fitted on MinMax-scaled inputs (see evaluate), so its
+# attributions must be computed on scaled inputs too. Section 5.5 states this and
+# Table S2 reports scaled values. Passing raw values to a model trained on 0-1
+# features yields a different ranking and a figure that matches neither.
+_sc_fig = MinMaxScaler().fit(Xtr42[deployed_cols])   # same fit evaluate() used for seed 42
+dm_dep = xgb.DMatrix(_sc_fig.transform(Xte42[deployed_cols]), feature_names=deployed_cols)
 sc_dep = seed42_models["deployed"].get_booster().predict(dm_dep, pred_contribs=True)[:, :-1]
 sv = pd.Series(np.abs(sc_dep).mean(axis=0), index=deployed_cols).sort_values(ascending=False)
+print("[shap] top 3 on scaled inputs (Table S2 expects n_module_views 1.49, "
+      "n_logins 1.04, std_module_score 0.45):")
+for _f, _v in sv.head(3).items():
+    print(f"       {_f:<22s} {_v:.3f}")
 top = sv.head(10)[::-1]
 fig, ax = plt.subplots(figsize=(6.2, 3.8))
 ax.barh(top.index, top.values, color="#5b7d99")
@@ -240,9 +261,9 @@ for i, v in enumerate(top.values):
     ax.text(v + 0.02, i, f"{v:.2f}", va="center", fontsize=8.5)
 ax.set_xlabel("Mean |SHAP value| (impact on model output)")
 ax.spines[["top", "right"]].set_visible(False)
-fig.savefig(f"{OUT_PREFIX}_FIG5_shap.png", bbox_inches="tight", dpi=300); plt.close()
+fig.savefig(f"{OUT_PREFIX}_FIG5_shap_SCALED.png", bbox_inches="tight", dpi=300); plt.close()
 sv.to_csv(f"{OUT_PREFIX}_shap_values.csv")
-print(f"\n[figures] {OUT_PREFIX}_FIG4_roc.png, {OUT_PREFIX}_FIG5_shap.png written")
+print(f"\n[figures] {OUT_PREFIX}_FIG4_roc.png, {OUT_PREFIX}_FIG5_shap_SCALED.png written")
 
 # ----------------------------------------------------------------------------
 # 9. NEW LOCKED BUNDLE (same schema as the previous one, fully documented)
@@ -264,9 +285,10 @@ bundle = dict(
               test_recall_at_threshold=round(float(recall_score(yte42, (p_final >= threshold).astype(int))), 3),
               test_precision_at_threshold=round(float(precision_score(yte42, (p_final >= threshold).astype(int), zero_division=0)), 3),
               mcnemar_full_vs_pruned=dict(b=b, c=c, chi2=round(chi2_stat, 3), p=round(p_mcnemar, 3)),
-              eo_gap_pruned=round(float(gap_pruned), 2), eo_gap_deployed=round(float(gap_dep), 2),
+              eo_gap_at_0_5_superseded=dict(pruned=round(float(gap_pruned), 2),
+                                            deployed=round(float(gap_dep), 2)),
               positive_class="at_risk(target=1)", trained_on="80% stratified split, seed42",
-              seeds=SEEDS, script="rerun_pruning.py"),
+              seeds=SEEDS, script="rerun_pruning_v3_original_protocol.py"),
 )
 joblib.dump(bundle, f"{OUT_PREFIX}_model_bundle.joblib")
 with open(f"{OUT_PREFIX}_run_summary.json", "w") as f:

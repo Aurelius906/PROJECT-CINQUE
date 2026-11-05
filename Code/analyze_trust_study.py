@@ -28,7 +28,7 @@ QUALITY = [f"s{i}_quality" for i in range(1, 6)]    # 0/1/2 intervention-quality
 # Participant codes excluded in the Section 5.10 robustness re-test: the two
 # participants whose open-text responses were duplicated boilerplate.
 # Leave empty to skip the re-test arm.
-EXCLUDE_BOILERPLATE = []        # e.g. ["P07", "P23"]
+EXCLUDE_BOILERPLATE = ["P07", "P09"]   # facilitator-issued codes, both Group A
 
 def cronbach_alpha(df):
     df = df.dropna(); k = df.shape[1]
@@ -81,10 +81,21 @@ def main(path):
     analyse(d.copy(), "full sample")
     if EXCLUDE_BOILERPLATE:
         col = participant_col(d)
-        keep = ~d[col].astype(str).str.strip().isin(EXCLUDE_BOILERPLATE)
-        dropped = (~keep).sum()
+        # Case- and whitespace-insensitive, and tolerant of a stray prefix:
+        # responses.csv stores these codes inconsistently ("p07", "Code p37"),
+        # so a plain case-sensitive isin() matched 0 of 2 and the re-test arm
+        # silently ran on the full sample.
+        _norm = (d[col].astype(str).str.strip().str.upper()
+                 .str.replace(r"^CODE\s+", "", regex=True))
+        _want = {c.strip().upper() for c in EXCLUDE_BOILERPLATE}
+        keep = ~_norm.isin(_want)
+        dropped = int((~keep).sum())
         if dropped != len(EXCLUDE_BOILERPLATE):
-            print(f"\n[warn] matched {dropped} of {len(EXCLUDE_BOILERPLATE)} codes in column '{col}'")
+            raise SystemExit(
+                f"\n[stop] matched {dropped} of {len(EXCLUDE_BOILERPLATE)} codes "
+                f"in column '{col}'. Section 5.10's re-test needs both. "
+                f"Codes present: {sorted(_norm.unique())}")
+        print(f"\n[ok] excluded {dropped} participants: {sorted(_want)}")
         analyse(d[keep].copy(), "boilerplate excluded (Section 5.10 re-test)")
     else:
         print("\n[note] EXCLUDE_BOILERPLATE is empty; Section 5.10 re-test arm skipped.")
