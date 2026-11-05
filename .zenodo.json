@@ -1,0 +1,47 @@
+{
+  "upload_type": "software",
+  "title": "Supporting code and outputs for \"Trust Without Detectable Decision Gains: Explained At-Risk Predictions, Educator Decisions, and the Limits of Model Portability\"",
+  "version": "v1.1.0",
+  "license": "cc-by-4.0",
+  "creators": [
+    {
+      "name": "Ankamah, Eric Anane",
+      "affiliation": "Human-Centred Artificial Intelligence Lab, Department of Computer Science, Kwame Nkrumah University of Science and Technology, Kumasi, Ghana",
+      "orcid": "0009-0005-5425-4449"
+    },
+    {
+      "name": "Yeboah, Sarfo Oduro",
+      "affiliation": "Human-Centred Artificial Intelligence Lab, Department of Computer Science, Kwame Nkrumah University of Science and Technology, Kumasi, Ghana",
+      "orcid": "0009-0006-0656-9216"
+    },
+    {
+      "name": "Annan, George",
+      "affiliation": "Human-Centred Artificial Intelligence Lab, Department of Computer Science, Kwame Nkrumah University of Science and Technology, Kumasi, Ghana",
+      "orcid": "0009-0007-9557-2851"
+    },
+    {
+      "name": "Donkoh, Benjamin Kwesi",
+      "affiliation": "Human-Centred Artificial Intelligence Lab, Department of Computer Science, Kwame Nkrumah University of Science and Technology, Kumasi, Ghana",
+      "orcid": "0009-0006-4463-666X"
+    },
+    {
+      "name": "Osei, Eric Opoku",
+      "affiliation": "Human-Centred Artificial Intelligence Lab, Department of Computer Science, Kwame Nkrumah University of Science and Technology, Kumasi, Ghana",
+      "orcid": "0000-0002-9871-3900"
+    }
+  ],
+  "keywords": [
+    "learning analytics",
+    "at-risk student prediction",
+    "SHAP",
+    "feature pruning",
+    "algorithmic fairness",
+    "equal opportunity",
+    "model portability",
+    "cross-context replication",
+    "educator trust",
+    "OULAD",
+    "reproducibility"
+  ],
+  "description": "Analysis code and the saved outputs of every run reported in the manuscript \"Trust Without Detectable Decision Gains: Explained At-Risk Predictions, Educator Decisions, and the Limits of Model Portability\".\n\nREADME.md at the repository root gives a run order mapping each script to the section it produces. Code/acceptance_gate.py re-derives 71 reported figures from the committed outputs and exits non-zero on any failure or unverified claim; the log for this release is outputs/acceptance_gate_log.txt and ends \"Safe to tag\". Code/G8_FIX_02_verify_oulad.py independently re-derives every OULAD figure from four committed artefacts alone, without the notebook, the model or the raw data.\n\nNot included: the institutional student records, which cannot be shared and remain the property of the university; three individual-level outputs carrying one row per student with outcome and fee-payment status; raw educator responses, withheld in line with the consent given, though the scored aggregate outcomes they support are included; and trained model weights, held by the data custodian.\n\nProduced with Python 3.13.18, XGBoost 3.4.1, scikit-learn 1.6.1 and imbalanced-learn 0.14.2. Code/requirements.lock.txt is the full pinned environment.\n\nThe OULAD dataset is publicly available under CC BY 4.0 (Kuzilek, Hlosta and Zdrahal, 2017); the oulad_* outputs are derived from it."
+}
