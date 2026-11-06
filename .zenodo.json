@@ -1,7 +1,6 @@
 {
   "upload_type": "software",
   "title": "Supporting code and outputs for \"Trust Without Detectable Decision Gains: Explained At-Risk Predictions, Educator Decisions, and the Limits of Model Portability\"",
-  "version": "v1.2.0",
   "license": "cc-by-4.0",
   "creators": [
     {
