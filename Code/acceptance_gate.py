@@ -185,7 +185,6 @@ try:
     (passes if len(ids) == 2 else fails).append(
         f"{'5.10     two excluded participants named':54s} got {ids}")
     # Both are in the predictions-only arm: only nA=17/nB=20 yields r = +.63.
-    # Confirm against THEMATIC_ANALYSIS_FINAL.md before trusting this to block a tag.
     check_eq("5.10     both from predictions-only (r = +.63)",
              ex.get("excluded_from_condition"), "predictions_only")
 except Exception as e:
@@ -213,7 +212,7 @@ try:
         f"{'4.9      recoding lowers alpha (two-block scale)':54s} "
         f"{raw_alpha:.3f} -> {rec_alpha:.3f}")
 
-    from scipy.stats import mannwhitneyu
+    from scipy.stats import mannwhitneyu, chi2_contingency, spearmanr
     rec["Trust"] = rec[ALL8].mean(axis=1)
     for name, pre, n in (("Competence (IMI)", "C", 4), ("Autonomy (IMI)", "A", 4),
                          ("Usefulness (TAM)", "U", 4), ("Ease of use (TAM)", "E", 4)):
@@ -249,6 +248,74 @@ try:
     for pre, want in (("C", 0.80), ("A", 0.82), ("U", 0.88), ("E", 0.90)):
         cols = [f"{pre}{i}" for i in range(1, 5) if f"{pre}{i}" in rec]
         check(f"4.9      alpha, {pre}-scale", cronbach(rec[cols]), want, 0.006)
+
+    # ---- 5.1 covariate balance between the two allocation blocks ----------
+    # Allocation ran off the pre-assigned code sequence in four blocks of ten
+    # (Section 4.12), not at random, so Section 5.1 reports a balance check.
+    # These re-derive it. p values are deliberately not gated: they depend on
+    # scipy's tie handling. The statistics and effect sizes are exact.
+    _W = {"one":1,"two":2,"three":3,"four":4,"five":5,
+          "six":6,"seven":7,"eight":8,"nine":9,"ten":10}
+    def _yrs(v):
+        t = str(v).strip()
+        if re.fullmatch(r"\d+(\.\d+)?", t): return float(t)
+        m = re.match(r"^(\d+(?:\.\d+)?)\s*years?\b", t, re.I)
+        if m: return float(m.group(1))
+        m = re.match(r"^([A-Za-z]+)\s*years?\b", t, re.I)
+        return float(_W[m.group(1).lower()]) if m and m.group(1).lower() in _W else None
+
+    anl = rec[rec["Trust"].notna()]                 # the 39 analysed participants
+    # pandas maps the literal string "None" to NaN on read, and two participants
+    # answered "None" - one in years, one in prior AI use. Re-read those columns
+    # with NA conversion off so the answers survive as text.
+    _txt = pd.read_csv(TRUST_CSV, keep_default_na=False, na_filter=False)
+    _txt.columns = [c.strip() for c in _txt.columns]
+    _yrs_raw = _txt["years"].reindex(anl.index)
+    check("4.12     prior-AI-use item answered by all 39",
+          float((_txt["ai_prior"].reindex(anl.index).str.strip() != "").sum()), 39.0, 0.5)
+    ag = anl["group"].str.upper()
+    _tab = pd.crosstab(anl["role"].astype(str).str.strip(), ag)
+    for _c in ("A", "B"):
+        if _c not in _tab: _tab[_c] = 0
+    _chi2, _pchi, _dof, _exp = chi2_contingency(_tab[["A", "B"]].values, correction=False)
+    check("5.1      role chi-square across conditions", float(_chi2), 5.58, 0.02)
+
+    _y = _yrs_raw.map(_yrs)
+    _ok = _y.notna()
+    _yA, _yB = _y[_ok & (ag == "A")], _y[_ok & (ag == "B")]
+    check("5.1      experience, usable entries", float(_ok.sum()), 33.0, 0.5)
+    check("5.1      experience n, Group A", float(len(_yA)), 16.0, 0.5)
+    check("5.1      experience n, Group B", float(len(_yB)), 17.0, 0.5)
+    check("5.1      experience median, Group A", float(_yA.median()), 2.0, 0.01)
+    check("5.1      experience median, Group B", float(_yB.median()), 4.0, 0.01)
+    _rY = mannwhitneyu(_yB, _yA, alternative="two-sided")
+    check("5.1      experience U (B vs A)", float(_rY.statistic), 211.5, 0.5)
+    check("5.1      experience rank-biserial r",
+          2 * float(_rY.statistic) / (len(_yA) * len(_yB)) - 1, 0.555, 0.005)
+
+    # The imbalance only matters if experience predicts trust. It does not,
+    # within either condition; the pooled value is induced by the group gap.
+    _rhoA = float(spearmanr(_y[_ok & (ag == "A")], anl.loc[_ok & (ag == "A"), "Trust"])[0])
+    _rhoB = float(spearmanr(_y[_ok & (ag == "B")], anl.loc[_ok & (ag == "B"), "Trust"])[0])
+    check("5.1      experience vs trust rho, Group A", _rhoA, -0.137, 0.01)
+    check("5.1      experience vs trust rho, Group B", _rhoB, +0.024, 0.01)
+    # 5.1 reports a sensitivity reading in which the one word-valued entry is
+    # taken as zero years. Gate it too, so neither reading rests on assertion.
+    _y0 = _yrs_raw.map(lambda v: 0.0 if str(v).strip().lower() == "none"
+                       else _yrs(v))
+    _ok0 = _y0.notna()
+    _a0, _b0 = _y0[_ok0 & (ag == "A")], _y0[_ok0 & (ag == "B")]
+    _r0 = mannwhitneyu(_b0, _a0, alternative="two-sided")
+    check("5.1      experience U, word entry read as 0", float(_r0.statistic), 212.0, 0.5)
+    check("5.1      experience r, word entry read as 0",
+          2 * float(_r0.statistic) / (len(_a0) * len(_b0)) - 1, 0.472, 0.005)
+    check("5.1      rho Group B, word entry read as 0",
+          float(spearmanr(_y0[_ok0 & (ag == "B")], anl.loc[_ok0 & (ag == "B"), "Trust"])[0]),
+          0.182, 0.01)
+
+    (passes if abs(_rhoA) < 0.3 and abs(_rhoB) < 0.3 else fails).append(
+        f"{'5.1      imbalance does not explain the 5.8 trust gap':54s} "
+        f"rho {_rhoA:+.3f} / {_rhoB:+.3f}")
 except Exception as e:
     block_skipped("5.8      educator responses unreadable", e)
 

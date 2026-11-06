@@ -5,13 +5,14 @@ for two independent groups: the Mann-Whitney U test (NOT Wilcoxon signed-rank,
 which is for paired data).
 
 All outcomes are tested TWO-SIDED, matching Section 4.10 of the manuscript.
-Both interpreting theories were selected after the analysis was complete, so no
-directional prediction was available in advance.
+The study materials stated directional hypotheses for trust, competence and
+autonomy. The two-sided test is the conservative choice and does not rely on
+them.
 
 Run:  python analyze_trust_study.py responses.csv
 """
-import sys, numpy as np, pandas as pd
-from scipy.stats import mannwhitneyu
+import sys, re, numpy as np, pandas as pd
+from scipy.stats import mannwhitneyu, chi2_contingency, spearmanr
 
 # subscale -> column prefixes (see column layout in the Analysis Guide)
 SCALES = {
@@ -65,7 +66,7 @@ def analyse(d, label):
         a, b = A[o].dropna(), B[o].dropna()
         if len(a) < 3 or len(b) < 3:
             print(f"{o:22s}  (insufficient n)"); continue
-        res = mannwhitneyu(b, a, alternative="two-sided")    # no predicted direction
+        res = mannwhitneyu(b, a, alternative="two-sided")    # two-sided (Section 4.10)
         U, p = float(res.statistic), float(res.pvalue)
         r = 2 * U / (len(a) * len(b)) - 1                    # rank-biserial effect size
         sig = "YES" if p < alpha else "no"
@@ -73,11 +74,97 @@ def analyse(d, label):
     print(f"\nBonferroni-corrected threshold = {alpha:.4f} ({m} outcomes).")
     print("Effect size r (rank-biserial): ~0.1 small, ~0.3 medium, ~0.5 large.")
 
+YEARS_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+               "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
+
+def parse_years(v):
+    """The years field is free text: '4', '4 years', 'Four years', blank, and in
+    two rows an answer belonging to another column. Returns None if unusable."""
+    s = str(v).strip()
+    if re.fullmatch(r"\d+(\.\d+)?", s):
+        return float(s)
+    m = re.match(r"^(\d+(?:\.\d+)?)\s*years?\b", s, re.I)
+    if m:
+        return float(m.group(1))
+    m = re.match(r"^([A-Za-z]+)\s*years?\b", s, re.I)
+    if m and m.group(1).lower() in YEARS_WORDS:
+        return float(YEARS_WORDS[m.group(1).lower()])
+    return None
+
+def balance(d):
+    """Covariate balance between the two allocation blocks (Section 5.1).
+
+    Allocation followed the pre-assigned participant-code sequence in four
+    consecutive blocks of ten by condition (Section 4.12), not at random, so the
+    conditions are checked for balance on the covariates the booklet recorded.
+    """
+    print(f"\n{'=' * 72}\nCOVARIATE BALANCE (Section 5.1)\n{'=' * 72}")
+    g = d["group"].astype(str).str.strip().str.upper()
+
+    if "role" in d:
+        tab = pd.crosstab(d["role"].astype(str).str.strip(), g)
+        for c in ("A", "B"):
+            if c not in tab: tab[c] = 0
+        tab = tab[["A", "B"]]
+        print("\n=== Role by condition ===")
+        print(tab.to_string())
+        chi2, pchi, dof, exp = chi2_contingency(tab.values, correction=False)
+        print(f"  chi-square({dof}) = {chi2:.2f}   p = {pchi:.3f}   "
+              f"smallest expected cell {exp.min():.1f}")
+
+    if "years" not in d:
+        print("\n[note] no years column; experience balance skipped.")
+        return
+    # pandas maps the literal string "None" to NaN on read; re-read the column
+    # with NA conversion off so a participant's "None" survives as text.
+    yr = d["years_raw"] if "years_raw" in d else d["years"]
+    y = yr.map(parse_years)
+    ok = y.notna()
+    yA, yB = y[ok & (g == "A")], y[ok & (g == "B")]
+    print("\n=== Teaching experience ===")
+    print(f"  usable entries {int(ok.sum())} of {len(d)}   "
+          f"(A {len(yA)}, B {len(yB)}; unusable A {int(((~ok) & (g == 'A')).sum())}, "
+          f"B {int(((~ok) & (g == 'B')).sum())})")
+    print(f"  median A {yA.median():.1f}   median B {yB.median():.1f}")
+    rY = mannwhitneyu(yB, yA, alternative="two-sided")
+    rr = 2 * float(rY.statistic) / (len(yA) * len(yB)) - 1
+    print(f"  U = {float(rY.statistic):.1f}   p = {float(rY.pvalue):.5f}   r = {rr:+.3f}")
+
+    tcols = [c for c in SCALES["Trust"] if c in d]
+    trust = d[tcols].mean(axis=1)          # T1-T4 already reversed by main()
+    print("\n=== Experience against trust: does the imbalance explain 5.8? ===")
+    for lbl, m in (("pooled", ok), ("Group A", ok & (g == "A")), ("Group B", ok & (g == "B"))):
+        rho, prho = spearmanr(y[m], trust[m])
+        print(f"  {lbl:8s} n = {int(m.sum()):2d}   Spearman rho = {rho:+.3f}   p = {prho:.3f}")
+    # Sensitivity (Section 5.1): one entry reads "None", which may mean zero
+    # years rather than a non-answer. Both readings are reported so that the
+    # conclusion does not rest on how that one cell is read.
+    y0 = yr.map(lambda v: 0.0 if str(v).strip().lower() == "none"
+                else parse_years(v))
+    ok0 = y0.notna()
+    a0, b0 = y0[ok0 & (g == "A")], y0[ok0 & (g == "B")]
+    r0 = mannwhitneyu(b0, a0, alternative="two-sided")
+    rr0 = 2 * float(r0.statistic) / (len(a0) * len(b0)) - 1
+    rhoB0 = float(spearmanr(y0[ok0 & (g == "B")], trust[ok0 & (g == "B")])[0])
+    print("\n=== Sensitivity: reading the word entry as zero years ===")
+    print(f"  usable {int(ok0.sum())}   n A {len(a0)}, B {len(b0)}")
+    print(f"  U = {float(r0.statistic):.1f}   p = {float(r0.pvalue):.5f}   "
+          f"r = {rr0:+.3f}   rho in the explanation condition = {rhoB0:+.3f}")
+
+    print("\n  Near-zero within-condition correlations mean the experience imbalance")
+    print("  does not account for the Section 5.8 trust difference under either reading.")
+
 def main(path):
     d = pd.read_csv(path)
     d.columns = [c.strip() for c in d.columns]
+    # keep the untouched text of the free-text columns: pandas turns a literal
+    # "None" into NaN, and two participants answered exactly that.
+    _raw = pd.read_csv(path, keep_default_na=False, na_filter=False)
+    _raw.columns = [c.strip() for c in _raw.columns]
+    d["years_raw"] = _raw["years"]
     for c in REVERSE:
         if c in d: d[c] = 6 - d[c]                     # reverse on 1..5, applied once
+    balance(d.copy())
     analyse(d.copy(), "full sample")
     if EXCLUDE_BOILERPLATE:
         col = participant_col(d)

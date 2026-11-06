@@ -27,9 +27,18 @@ os.makedirs("outputs", exist_ok=True)
 EXCLUDED = ["P07", "P09"]          # facilitator-issued codes, both Group A
 # These must stay identical to EXCLUDE_BOILERPLATE in analyze_trust_study.py line 31.
 CONDITION = "predictions_only"     # Group A. Change ONLY if your records say otherwise.
-json.dump(dict(excluded_participant_ids=EXCLUDED, excluded_from_condition=CONDITION,
-               reason="duplicated boilerplate open-text responses (Section 4.14)"),
-          open("outputs/educator_exclusions.json", "w"), indent=2)
+# Writes outputs/educator_exclusions.json with all seven keys, byte-for-byte as
+# committed. Re-running this script must not truncate the committed artefact.
+json.dump({
+    "excluded_participant_ids": EXCLUDED,
+    "excluded_from_condition": CONDITION,
+    "reason": "open-text responses identified as duplicated boilerplate",
+    "identified": "post hoc, after reading the responses (Section 4.10)",
+    "effect": "n falls from 19 and 20 to 17 and 20",
+    "retest": {"trust_U": 277.0, "trust_p": 0.001,
+               "trust_r": 0.63, "intervention_quality_p": 0.364},
+    "reported_in": "Section 5.10",
+}, open("outputs/educator_exclusions.json", "w"), indent=2)
 # analyze_trust_study.py line 31 already carries the same two codes.
 
 d = pd.read_csv("data_local/responses.csv"); d.columns = [c.strip() for c in d.columns]
