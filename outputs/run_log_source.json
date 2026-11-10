@@ -304,6 +304,56 @@
     "paper": 0.0077,
     "differs": false
   },
+  "5.3      mean dAUC at 5% noise": {
+    "got": 0.0015,
+    "paper": 0.0015,
+    "differs": false
+  },
+  "5.3      mean dAUC at 10% noise": {
+    "got": 0.0003,
+    "paper": 0.0003,
+    "differs": false
+  },
+  "5.3      mean dAUC at 20% noise": {
+    "got": -0.0033,
+    "paper": -0.0033,
+    "differs": false
+  },
+  "5.3      across-draw SD at 5% noise": {
+    "got": 0.0032,
+    "paper": 0.0032,
+    "differs": false
+  },
+  "5.3      across-draw SD at 20% noise": {
+    "got": 0.0082,
+    "paper": 0.0082,
+    "differs": false
+  },
+  "5.3      recall at 20% noise": {
+    "got": 0.704,
+    "paper": 0.704,
+    "differs": false
+  },
+  "5.3      precision at 20% noise": {
+    "got": 0.433,
+    "paper": 0.433,
+    "differs": false
+  },
+  "5.3      cells altered at 5% noise, %": {
+    "got": 58.3546,
+    "paper": null,
+    "differs": false
+  },
+  "5.3      cells altered at 10% noise, %": {
+    "got": 62.4962,
+    "paper": null,
+    "differs": false
+  },
+  "5.3      cells altered at 20% noise, %": {
+    "got": 69.2845,
+    "paper": null,
+    "differs": false
+  },
   "5.4      gender EO gap, seed 42, deployed at tau": {
     "got": 0.121,
     "paper": 0.121,
@@ -362,18 +412,6 @@
   "6.7      three-level balanced accuracy": {
     "got": 0.439,
     "paper": 0.439,
-    "differs": false
-  },
-  "5.14     timings of record": {
-    "got": {
-      "fit_s_full": 2.12,
-      "fit_s_pruned": 1.46,
-      "fit_s_deployed": 1.43,
-      "peak_mb_deployed_fit": 2.8,
-      "inference_us_per_record": 11.3,
-      "shap_ms_per_record": 0.8
-    },
-    "paper": null,
     "differs": false
   },
   "6.8      26 minus 25 (no total_score)": {

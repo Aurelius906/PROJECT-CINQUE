@@ -271,6 +271,19 @@ Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.20, stratify=y, random_s
 sc, m = fit(Xtr, ytr, deployed_cols, 42)
 sv = pd.read_csv("cinque_v3_shap_values_SCALED.csv", index_col=0).iloc[:, 0]   # from RUN 2
 top6 = list(sv.index[:6]); base_auc = roc_auc_score(yte, proba(sc, m, Xte, deployed_cols))
+
+# Section 4.13 and the Table S7 caption: four of the six are integer-valued
+# counts or module scores, clipped to the observed range and rounded back to
+# integers; the remaining two, score dispersion and cumulative quiz time, are
+# continuous and clipped WITHOUT rounding. The released code rounded all six,
+# which does not reproduce 5.3. Derive the split from the data, and assert it,
+# so the code cannot drift from the paper again.
+INT6 = [c for c in top6 if np.abs(Xtr[c] - np.round(Xtr[c])).max() == 0]
+CONT6 = [c for c in top6 if c not in INT6]
+assert len(INT6) == 4, f"4.13 says four integer-valued features; found {len(INT6)}: {INT6}"
+assert set(CONT6) == {"std_module_score", "total_quiz_time_mins"}, \
+    f"4.13 names score dispersion and cumulative quiz time as the continuous pair; got {CONT6}"
+
 pert = []
 for lvl in [0.05, 0.10, 0.20]:
     for draw in range(20):
@@ -278,17 +291,37 @@ for lvl in [0.05, 0.10, 0.20]:
         Xp = Xte.copy()
         for c in top6:
             sd = Xtr[c].std()
-            Xp[c] = np.clip(np.round(Xte[c] + rng.normal(0, lvl * sd, len(Xte))), Xtr[c].min(), Xtr[c].max())
+            v = Xte[c] + rng.normal(0, lvl * sd, len(Xte))
+            if c in INT6:
+                v = np.round(v)                      # 4.13: integers stay integers
+            Xp[c] = np.clip(v, Xtr[c].min(), Xtr[c].max())
         changed = float((Xp[top6].values != Xte[top6].values).mean())
         pp = proba(sc, m, Xp, deployed_cols); yhp = (pp >= thr["deployed"]).astype(int)
         pert.append(dict(level=lvl, draw=draw, cells_changed=changed,
                          d_auc=roc_auc_score(yte, pp) - base_auc,
                          recall=recall_score(yte, yhp), precision=precision_score(yte, yhp)))
 pert = pd.DataFrame(pert); pert.to_csv("outputs/perturbation_5_3.csv", index=False)
-print(pert.groupby("level").agg(cells=("cells_changed", "mean"), d_auc=("d_auc", "mean"),
-                                sd=("d_auc", "std"), recall=("recall", "mean"),
-                                precision=("precision", "mean")).round(4))
-print("PAPER 5.3: cells 26/31/41%, dAUC +0.0013/+0.0003/-0.0022, SD 0.0025->0.0072")
+_g = pert.groupby("level").agg(cells=("cells_changed", "mean"), d_auc=("d_auc", "mean"),
+                               sd=("d_auc", "std"), recall=("recall", "mean"),
+                               precision=("precision", "mean")).sort_index()
+print(_g.round(4))
+
+# Until this round the block printed its results and logged nothing, so 5.3 sat
+# outside the acceptance gate and could never be reported as differing. These
+# entries put it into run_log_source.json.
+for _i, _want in ((0, 0.0015), (1, 0.0003), (2, -0.0033)):
+    say(f"5.3      mean dAUC at {int(_g.index[_i] * 100)}% noise",
+        float(_g.iloc[_i]["d_auc"]), _want)
+say("5.3      across-draw SD at 5% noise",  float(_g.iloc[0]["sd"]), 0.0032)
+say("5.3      across-draw SD at 20% noise", float(_g.iloc[2]["sd"]), 0.0082)
+say("5.3      recall at 20% noise",    float(_g.iloc[2]["recall"]),    0.704, 3)
+say("5.3      precision at 20% noise", float(_g.iloc[2]["precision"]), 0.433, 3)
+# 5.3 gives the altered-cell share as a percentage to one decimal. It is logged
+# without a target because the comparison would sit on a rounding boundary;
+# the printed table above carries the value, and 5.3 reports 58.4/62.5/69.3.
+for _i in (0, 1, 2):
+    say(f"5.3      cells altered at {int(_g.index[_i] * 100)}% noise, %",
+        float(_g.iloc[_i]["cells"]) * 100)
 
 # ===== BLOCK H - 5.5 gender gap on BOTH bases (fixes contradiction C8) ========
 ge = s42["gender"].values
