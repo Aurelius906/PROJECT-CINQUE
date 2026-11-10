@@ -77,15 +77,24 @@
   pass  5.13     zero-shot mean AUC                            got   0.64167  want 0.642
   pass  5.13     zero-shot SD                                  got   0.04672  want 0.047
   pass  5.13     matched nine-column ceiling                   got   0.92585  want 0.926
-  pass  5.13     matched ceiling SD                            got   0.00048  want 0.001
+  pass  5.13     matched ceiling SD below 0.001                got 0.00048
   pass  5.13     matched transfer gap                          got   0.28419  want 0.284
   pass  5.13     ceiling is nine-column, not 0.937 full-schema got 0.9259
-  pass  4.11     5x5 CV mean AUC, full                         got   0.86439  want 0.865
-  pass  4.11     5x5 CV mean AUC, pruned                       got   0.86847  want 0.869
+  pass  4.11     5x5 CV mean AUC, full                         got   0.86439  want 0.864
+  pass  4.11     5x5 CV mean AUC, pruned                       got   0.86847  want 0.868
   pass  4.11     5x5 CV mean AUC, deployed                     got   0.85827  want 0.858
   pass  4.11     5x5 CV fold count                             got      75.0  want 75.0
+  pass  S4       re-tune winner matches Table S4 row 3         got (2, 600, 0.01, 0.7, 0.8, 10, 20)  want (2, 600, 0.01, 0.7, 0.8, 10, 20)
+  pass  5.14     fit_s_full                                    got      2.12  want 2.12
+  pass  5.14     fit_s_pruned                                  got      1.46  want 1.46
+  pass  5.14     fit_s_deployed                                got      1.43  want 1.43
+  pass  5.14     peak_mb_deployed_fit                          got       2.8  want 2.8
+  pass  5.14     inference_us_per_record                       got      11.3  want 11.3
+  pass  5.14     shap_ms_per_record                            got       0.8  want 0.8
   pass  no mock data and no unseeded randomness                clean
 ==================================================================================
-86 passed, 0 failed, 0 skipped
+==================================================================================
+93 passed, 0 failed, 0 skipped, 0 local-only
 
-Safe to tag. Record this commit hash in the title page and Sections 4.15 and 7.
+Record this commit hash in the title page and Sections 4.15 and 7.
+Safe to tag. (0 failed, 0 skipped, 0 local-only)

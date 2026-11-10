@@ -1,0 +1,18 @@
+{
+  "best_params": {
+    "subsample": 0.7,
+    "reg_lambda": 20,
+    "n_estimators": 600,
+    "min_child_weight": 10,
+    "max_depth": 2,
+    "learning_rate": 0.01,
+    "colsample_bytree": 0.8
+  },
+  "cv_auc": 0.794,
+  "n_iter": 40,
+  "space_size": 2916,
+  "random_state": 42,
+  "tuned_on_seed": 42,
+  "cv_folds": 5,
+  "class_weighting": true
+}

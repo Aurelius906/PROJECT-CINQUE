@@ -6,7 +6,7 @@
   },
   "Table 1  full 20-split SD": {
     "got": 0.018,
-    "paper": null,
+    "paper": 0.018,
     "differs": false
   },
   "Table 1  pruned 20-split mean AUC": {
@@ -16,7 +16,7 @@
   },
   "Table 1  pruned 20-split SD": {
     "got": 0.016,
-    "paper": null,
+    "paper": 0.016,
     "differs": false
   },
   "Table 1  deployed 20-split mean AUC": {
@@ -26,7 +26,17 @@
   },
   "Table 1  deployed 20-split SD": {
     "got": 0.021,
-    "paper": null,
+    "paper": 0.021,
+    "differs": false
+  },
+  "Table 1  transfer9 20-split mean AUC": {
+    "got": 0.851,
+    "paper": 0.851,
+    "differs": false
+  },
+  "Table 1  transfer9 20-split SD": {
+    "got": 0.011,
+    "paper": 0.011,
     "differs": false
   },
   "4.6/5.2  paired diff pruned-full": {
@@ -36,23 +46,23 @@
   },
   "4.6/5.2  95% CI low": {
     "got": 0.001,
-    "paper": 0.0011,
-    "differs": true
+    "paper": 0.001,
+    "differs": false
   },
   "4.6/5.2  95% CI high": {
     "got": 0.0058,
-    "paper": 0.0057,
-    "differs": true
+    "paper": 0.0058,
+    "differs": false
   },
   "4.6/5.2  TOST t(19) upper": {
     "got": -5.84,
-    "paper": -6.01,
-    "differs": true
+    "paper": -5.84,
+    "differs": false
   },
   "4.10     SD of 20 paired differences": {
     "got": 0.0051,
-    "paper": 0.0049,
-    "differs": true
+    "paper": 0.0051,
+    "differs": false
   },
   "4.11     paired diff pruned-deployed": {
     "got": 0.0106,
@@ -129,25 +139,25 @@
     "paper": 22,
     "differs": false
   },
-  "5.6 ADD  deployed TP at 0.5": {
+  "5.6      deployed TP at 0.5": {
     "got": 60.0,
-    "paper": null,
+    "paper": 60,
     "differs": false
   },
-  "5.6 ADD  deployed FP at 0.5": {
+  "5.6      deployed FP at 0.5": {
     "got": 21.0,
-    "paper": null,
+    "paper": 21,
     "differs": false
   },
   "5.2      5x5 CV full": {
     "got": 0.864,
-    "paper": 0.865,
-    "differs": true
+    "paper": 0.864,
+    "differs": false
   },
   "5.2      5x5 CV pruned": {
     "got": 0.868,
-    "paper": 0.869,
-    "differs": true
+    "paper": 0.868,
+    "differs": false
   },
   "5.2      5x5 CV deployed": {
     "got": 0.858,
@@ -155,14 +165,14 @@
     "differs": false
   },
   "4.2      AUC of summed module score alone": {
-    "got": 0.216,
+    "got": 0.784,
     "paper": 0.784,
-    "differs": true
+    "differs": false
   },
   "4.2      depth-2 tree on score columns": {
     "got": 0.746,
-    "paper": 0.76,
-    "differs": true
+    "paper": 0.746,
+    "differs": false
   },
   "4.2      deployed minus all score columns": {
     "got": 0.839,
@@ -176,13 +186,13 @@
   },
   "4.2      rho 95% CI low": {
     "got": 0.251,
-    "paper": 0.253,
-    "differs": true
+    "paper": 0.251,
+    "differs": false
   },
   "4.2      rho 95% CI high": {
     "got": 0.317,
-    "paper": 0.315,
-    "differs": true
+    "paper": 0.317,
+    "differs": false
   },
   "4.2      Kruskal-Wallis H": {
     "got": 315.4,
@@ -271,28 +281,28 @@
   },
   "4.7      sensitivity pruned": {
     "got": 0.883,
-    "paper": 0.88,
+    "paper": 0.883,
     "differs": false
   },
   "4.7      sensitivity deployed": {
     "got": 0.875,
-    "paper": 0.871,
-    "differs": true
+    "paper": 0.875,
+    "differs": false
   },
   "4.7      pruned-full diff": {
     "got": 0.0005,
-    "paper": -0.0024,
-    "differs": true
+    "paper": 0.0005,
+    "differs": false
   },
   "4.7      pruned-deployed diff": {
     "got": 0.0083,
-    "paper": 0.0089,
-    "differs": true
+    "paper": 0.0083,
+    "differs": false
   },
   "4.7      full-deployed diff (write as full minus deployed)": {
     "got": 0.0077,
-    "paper": 0.0113,
-    "differs": true
+    "paper": 0.0077,
+    "differs": false
   },
   "5.4      gender EO gap, seed 42, deployed at tau": {
     "got": 0.121,
@@ -301,8 +311,8 @@
   },
   "5.5      gender EO gap, 20-split mean, deployed at per-split tau": {
     "got": 0.053,
-    "paper": 0.024,
-    "differs": true
+    "paper": 0.053,
+    "differs": false
   },
   "5.5      fee EO gap, seed 42, pruned at tau (same basis as 0.121)": {
     "got": 0.49,
@@ -321,13 +331,13 @@
   },
   "5.7      retuned_smote": {
     "got": 0.791,
-    "paper": 0.781,
-    "differs": true
+    "paper": 0.791,
+    "differs": false
   },
   "5.7      retuned_weighted": {
     "got": 0.801,
-    "paper": 0.799,
-    "differs": true
+    "paper": 0.801,
+    "differs": false
   },
   "5.7      logreg": {
     "got": 0.8,
@@ -336,53 +346,35 @@
   },
   "5.7      retuned_smote - deployed": {
     "got": 0.0341,
-    "paper": 0.0238,
-    "differs": true
+    "paper": 0.0341,
+    "differs": false
   },
   "5.7      weighted - retuned_smote": {
     "got": 0.0102,
-    "paper": 0.0183,
-    "differs": true
+    "paper": 0.0102,
+    "differs": false
   },
   "6.7      depth-3 tree, unpaid vs paid AUC": {
     "got": 0.716,
-    "paper": 0.712,
-    "differs": true
+    "paper": 0.716,
+    "differs": false
   },
   "6.7      three-level balanced accuracy": {
     "got": 0.439,
-    "paper": 0.46,
-    "differs": true
+    "paper": 0.439,
+    "differs": false
   },
-  "5.14     fit seconds, full": {
-    "got": 2.69,
-    "paper": 3.19,
-    "differs": true
-  },
-  "5.14     fit seconds, pruned": {
-    "got": 2.03,
-    "paper": 1.93,
-    "differs": true
-  },
-  "5.14     fit seconds, deployed": {
-    "got": 1.51,
-    "paper": 1.89,
-    "differs": true
-  },
-  "5.14     peak allocation MB (deployed fit)": {
-    "got": 2.8,
-    "paper": 3.3,
-    "differs": true
-  },
-  "5.14     inference microseconds per record": {
-    "got": 11.4,
-    "paper": 9.8,
-    "differs": true
-  },
-  "5.14     SHAP ms per record": {
-    "got": 0.76,
-    "paper": 0.73,
-    "differs": true
+  "5.14     timings of record": {
+    "got": {
+      "fit_s_full": 2.12,
+      "fit_s_pruned": 1.46,
+      "fit_s_deployed": 1.43,
+      "peak_mb_deployed_fit": 2.8,
+      "inference_us_per_record": 11.3,
+      "shap_ms_per_record": 0.8
+    },
+    "paper": null,
+    "differs": false
   },
   "6.8      26 minus 25 (no total_score)": {
     "got": 0.0012,
@@ -404,9 +396,9 @@
       "max_depth": 8,
       "learning_rate": 0.1,
       "subsample": 0.8,
-      "objective": "binary:logistic",
       "eval_metric": "auc",
-      "random_state": 42
+      "random_state": 42,
+      "n_jobs": -1
     },
     "pruned_cols": [
       "n_module_views",
@@ -469,11 +461,6 @@
     "tau": {
       "pruned": 0.07547499984502792,
       "deployed": 0.08333387970924377
-    },
-    "defaults": {
-      "tree_method": "not set; XGBoost 3.4.1 resolves auto to the histogram algorithm (grow_quantile_histmaker) on CPU",
-      "device": "not set; resolves to cpu",
-      "verified_from": "booster save_config() of the release bundle"
     }
   }
 }

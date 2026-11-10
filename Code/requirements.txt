@@ -18,7 +18,7 @@ imbalanced-learn==0.14.2
 
 # Remaining direct dependencies, at the versions the released runs used.
 
-numpy==2.4.6
+numpy==2.1.3
 pandas==2.2.3
 scipy==1.16.3
 shap==0.54.1
@@ -26,8 +26,10 @@ matplotlib
 pyarrow
 openpyxl
 
-# Before tagging, freeze from a clean install that passes the gate, and commit
-# the result as requirements.lock.txt (F5):
+# requirements.lock.txt records the environment of the run of record, which was
+# a Google Colab session; it holds Colab-only entries and is a record rather than
+# an installable file. To rebuild a clean environment and check it against the
+# gate:
 #
 #   python -m venv .venv && .venv\Scripts\activate     # Windows
 #   pip install -r Code/requirements.txt

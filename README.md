@@ -17,7 +17,7 @@ and the manuscript disagree, the script is correct and the manuscript is wrong.
 | 4 | `Code/RetTransUst.ipynb`, then `Code/G8_FIX_03_*.py` | 4.17, 5.13, Figure 5, Table S10 |
 | 5 | `Code/analyze_trust_study.py`, then `Code/G8_FIX_04_*.py` | 4.9, 4.13, 5.8–5.10 |
 | 6 | `Code/acceptance_gate.py` | checks every reported number against `outputs/` |
-| 7 | `Code/G8_M3_release.py` | assembles `RELEASE/` and its SHA-256 digests |
+| 7 | `Code/G8_M3_release.py` | assembles `RELEASE/` locally (not committed) |
 
 Scripts 1 and 2 must run before 6: the gate reads their outputs. Script 3 is
 self-contained and can run in any order relative to the others.
@@ -25,11 +25,15 @@ self-contained and can run in any order relative to the others.
 ## Environment
 
 Python 3.13.18, XGBoost 3.4.1, scikit-learn 1.6.1, imbalanced-learn 0.14.2.
-Also pandas 2.2.3, NumPy 2.4.6, SciPy 1.16.3, SHAP 0.54.1.
+Also pandas 2.2.3, NumPy 2.1.3, SciPy 1.16.3, SHAP 0.54.1.
 
 ```
-pip install -r Code/requirements.lock.txt
+pip install -r Code/requirements.txt
 ```
+
+`Code/requirements.lock.txt` records the full environment of the run of record,
+which was a Google Colab session. It contains Colab-only entries and is a record,
+not an installable file; `Code/requirements.txt` is the one to install from.
 
 The lock file is generated with `pip freeze` at tag time and is the record of
 what the reported numbers were produced with. The four versions named first are
@@ -59,14 +63,17 @@ OULAD is public: Kuzilek, Hlosta and Zdrahal (2017), CC BY 4.0. It is downloaded
 at run time by `Code/Oulad_exp.ipynb` and is not redistributed here.
 
 Raw educator responses are not shared, in line with the consent given. The
-aggregate outputs they support are in `outputs/`.
+group-level results they support are committed as
+`outputs/educator_aggregates.csv`, and the acceptance gate checks the reported
+figures against them.
 
 ## What this repository does not hold
 
 - the institutional extract the models were fitted on
 - raw educator responses or their coding rounds
 - any API token or credential
-- trained model weights (see `RELEASE/NOTES.md` for the current decision)
+- trained model weights (held by the data custodian, available on reasonable
+  request)
 - `seed42_predictions.csv`, `complete_records_5_7.csv` and
   `perturbation_5_3.csv`, which carry one row per student with the outcome and
   fee-payment status. De-identified, but still individual-level institutional

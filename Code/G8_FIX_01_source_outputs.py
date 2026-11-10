@@ -127,9 +127,9 @@ for cfg, want in [("full", 0.868), ("pruned", 0.871), ("deployed", 0.861), ("tra
          "deployed": 0.021, "transfer9": 0.011}.get(cfg), 3)
 t1 = tost_paired(piv["pruned"], piv["full"])
 say("4.6/5.2  paired diff pruned-full", t1["mean"], 0.0034)
-say("4.6/5.2  95% CI low", t1["lo"], 0.0011); say("4.6/5.2  95% CI high", t1["hi"], 0.0057)
-say("4.6/5.2  TOST t(19) upper", t1["t_upper"], -6.01, 2)
-say("4.10     SD of 20 paired differences", t1["sd"], 0.0049)
+say("4.6/5.2  95% CI low", t1["lo"], 0.0010); say("4.6/5.2  95% CI high", t1["hi"], 0.0058)
+say("4.6/5.2  TOST t(19) upper", t1["t_upper"], -5.84, 2)
+say("4.10     SD of 20 paired differences", t1["sd"], 0.0051)
 t2 = tost_paired(piv["pruned"], piv["deployed"])
 say("4.11     paired diff pruned-deployed", t2["mean"], 0.0106)
 say("4.11     95% CI low", t2["lo"], 0.0062); say("4.11     95% CI high", t2["hi"], 0.0151)
@@ -177,18 +177,20 @@ for fold, (tr, te) in enumerate(rskf.split(X, y)):
         sc, m = fit(X.iloc[tr], y.iloc[tr], cols, 42)
         cv.append(dict(config=name, fold=fold, auc=roc_auc_score(y.iloc[te], proba(sc, m, X.iloc[te], cols))))
 cv = pd.DataFrame(cv); cv.to_csv("outputs/repeated_cv55.csv", index=False)
-for cfg, want in [("full", 0.865), ("pruned", 0.869), ("deployed", 0.858)]:
+for cfg, want in [("full", 0.864), ("pruned", 0.868), ("deployed", 0.858)]:
     say(f"5.2      5x5 CV {cfg}", cv[cv.config == cfg].auc.mean(), want, 3)
 
 # ===== BLOCK D - 4.2 label-rebuild checks and fee-engagement association ======
 mods = [c for c in df.columns if c.startswith("score_m")]
-say("4.2      AUC of summed module score alone", roc_auc_score(y, df["total_score"]), 0.784, 3)
+# At-risk is the positive class and a HIGHER summed score means LOWER risk,
+# so the score is negated. Without the minus sign the check prints 1 - 0.784.
+say("4.2      AUC of summed module score alone", roc_auc_score(y, -df["total_score"]), 0.784, 3)
 dt_auc = []
 for s in SPLITS20:
     Xtr, Xte, ytr, yte = train_test_split(df[mods], y, test_size=0.20, stratify=y, random_state=s)
     dt = DecisionTreeClassifier(max_depth=2, random_state=s).fit(Xtr, ytr)
     dt_auc.append(roc_auc_score(yte, dt.predict_proba(Xte)[:, 1]))
-say("4.2      depth-2 tree on score columns", np.mean(dt_auc), 0.760, 3)
+say("4.2      depth-2 tree on score columns", np.mean(dt_auc), 0.746, 3)
 score_cols = [c for c in deployed_cols if c.startswith("score_m") or c in ("total_score",)]
 no_score = [c for c in deployed_cols if c not in score_cols]
 a_ns = []
@@ -204,8 +206,8 @@ rng = np.random.default_rng(42); idx = np.arange(len(df)); boots = []
 for _ in range(2000):
     i = rng.choice(idx, len(idx), replace=True)
     boots.append(stats.spearmanr(fee_ord.values[i], df["n_module_views"].values[i]).statistic)
-say("4.2      rho 95% CI low", np.percentile(boots, 2.5), 0.253, 3)
-say("4.2      rho 95% CI high", np.percentile(boots, 97.5), 0.315, 3)
+say("4.2      rho 95% CI low", np.percentile(boots, 2.5), 0.251, 3)
+say("4.2      rho 95% CI high", np.percentile(boots, 97.5), 0.317, 3)
 H = stats.kruskal(*[df.loc[df.fee_payment_status == g, "n_module_views"] for g in ["Unpaid", "Partial", "Paid"]])
 say("4.2      Kruskal-Wallis H", H.statistic, 315.4, 1)
 for col, want in [("n_logins", 0.145), ("engagement_span_days", 0.093)]:
@@ -240,10 +242,8 @@ say("4.6/5.2  t(4)", tt.statistic, 2.20, 2); say("4.6/5.2  p", tt.pvalue, 0.093,
 
 # ===== BLOCK F - 4.7 SMOTE inside each CV fold (tuning sensitivity) ===========
 Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.20, stratify=y, random_state=42)
-# Table S4 says this search space was NOT recorded, and the recorded winner
-# (depth 4, 200 trees, lr 0.05, subsample 1.0) lies outside the record grid.
-# This block runs a DOCUMENTED search whose grid contains that winner, so
-# Table S4 can state a real search space. 54 combinations x 5 folds.
+# Table S4 row 2 records this 54-combination grid and its selected values
+# (depth 4, 100 trees, lr 0.05, subsample 1.0). 54 combinations x 5 folds.
 pipe = ImbPipeline([("sc", MinMaxScaler()), ("sm", SMOTE(random_state=42)),
                     ("xgb", XGBClassifier(eval_metric="auc", random_state=42, n_jobs=-1))])
 grid = {"xgb__max_depth": [4, 6, 8], "xgb__n_estimators": [100, 200, 300],
@@ -253,19 +253,17 @@ gs = GridSearchCV(pipe, grid, cv=StratifiedKFold(5, shuffle=True, random_state=4
 p_sens = {k.replace("xgb__", ""): v for k, v in gs.best_params_.items()}
 p_sens.update(eval_metric="auc", random_state=42, n_jobs=-1)
 print("4.7 documented search winner:", p_sens, "CV AUC", round(gs.best_score_, 3))
-print("RECORDED winner (Table S4): depth 4, 200 trees, lr 0.05, subsample 1.0")
-print("Same winner -> keep the 4.7 numbers and write the grid into Table S4.")
-print("Different winner -> the numbers below replace 0.882/0.880/0.871 in 4.7 and Table S4.")
+print("TABLE S4 row 2 records: depth 4, 100 trees, lr 0.05, subsample 1.0")
 sens = {k: [] for k in CONFIGS}
 for s in SPLITS20:
     Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.20, stratify=y, random_state=s)
     for name, cols in CONFIGS.items():
         sc, m = fit(Xtr, ytr, cols, s, p_sens); sens[name].append(roc_auc_score(yte, proba(sc, m, Xte, cols)))
-for cfg, want in [("full", 0.882), ("pruned", 0.880), ("deployed", 0.871)]:
+for cfg, want in [("full", 0.882), ("pruned", 0.883), ("deployed", 0.875)]:
     say(f"4.7      sensitivity {cfg}", np.mean(sens[cfg]), want, 3)
-r = tost_paired(sens["pruned"], sens["full"]); say("4.7      pruned-full diff", r["mean"], -0.0024)
-r = tost_paired(sens["pruned"], sens["deployed"]); say("4.7      pruned-deployed diff", r["mean"], 0.0089)
-r = tost_paired(sens["full"], sens["deployed"]); say("4.7      full-deployed diff (write as full minus deployed)", r["mean"], 0.0113)
+r = tost_paired(sens["pruned"], sens["full"]); say("4.7      pruned-full diff", r["mean"], 0.0005)
+r = tost_paired(sens["pruned"], sens["deployed"]); say("4.7      pruned-deployed diff", r["mean"], 0.0083)
+r = tost_paired(sens["full"], sens["deployed"]); say("4.7      full-deployed diff (write as full minus deployed)", r["mean"], 0.0077)
 pd.DataFrame(sens, index=SPLITS20).to_csv("outputs/sensitivity_smote_in_fold.csv")
 
 # ===== BLOCK G - 5.3 perturbation of the six top SHAP features ===============
@@ -307,7 +305,7 @@ for s in SPLITS20:
     yh_ = (proba(sc, m, Xte, deployed_cols) >= t_s).astype(int)
     g_, r_ = eo(yh_, df.loc[Xte.index, "gender"].astype(str).values, np.asarray(yte))
     gaps.append(g_); recs.append(r_)
-say("5.5      gender EO gap, 20-split mean, deployed at per-split tau", np.mean(gaps), 0.024, 3)
+say("5.5      gender EO gap, 20-split mean, deployed at per-split tau", np.mean(gaps), 0.053, 3)
 fg, _ = eo((s42.proba_pruned >= thr["pruned"]).values.astype(int), s42.fee_status.values, yte_v)
 say("5.5      fee EO gap, seed 42, pruned at tau (same basis as 0.121)", fg, 0.490, 3)
 
@@ -336,8 +334,13 @@ srch = RandomizedSearchCV(XGBClassifier(eval_metric="auc", random_state=42, n_jo
                           random_state=42).fit(sc.transform(Xtr[deployed_cols]), ytr)
 p_ct = {**srch.best_params_, "eval_metric": "auc", "random_state": 42, "n_jobs": -1}
 print("5.7 re-tuned configuration:", p_ct)
-print("TABLE S4 says: depth 2, 300 trees, lr 0.03, subsample 0.9, colsample 0.8, min child weight 1, lambda 5")
-print("If the printed configuration differs, Table S4 and 5.7 must take the printed one.")
+json.dump(dict(best_params=srch.best_params_, cv_auc=round(srch.best_score_, 3),
+               n_iter=40, space_size=2916, random_state=42,
+               tuned_on_seed=SPLITS20[0], cv_folds=5, class_weighting=True),
+          open("outputs/complete_record_retune.json", "w"), indent=2)
+print("TABLE S4 row 3 records: depth 2, 600 trees, lr 0.01, subsample 0.7,",
+      "colsample 0.8, min child weight 10, lambda 20")
+print("If the printed configuration differs, the CODE wins: Table S4 row 3 and 5.7 take it.")
 arms = {k: [] for k in ["deployed", "retuned_smote", "retuned_weighted", "logreg"]}
 for s in SPLITS20:
     Xtr, Xte, ytr, yte = train_test_split(Xc, yc, test_size=0.20, stratify=yc, random_state=s)
@@ -349,10 +352,10 @@ for s in SPLITS20:
     arms["retuned_weighted"].append(roc_auc_score(yte, XGBClassifier(**p_ct, scale_pos_weight=spw).fit(A, ytr).predict_proba(B)[:, 1]))
     arms["logreg"].append(roc_auc_score(yte, LogisticRegression(max_iter=2000, class_weight="balanced").fit(A, ytr).predict_proba(B)[:, 1]))
 arms = pd.DataFrame(arms, index=SPLITS20); arms.to_csv("outputs/complete_records_5_7.csv")
-for k, want in [("deployed", 0.757), ("retuned_smote", 0.781), ("retuned_weighted", 0.799), ("logreg", 0.800)]:
+for k, want in [("deployed", 0.757), ("retuned_smote", 0.791), ("retuned_weighted", 0.801), ("logreg", 0.800)]:
     say(f"5.7      {k}", arms[k].mean(), want, 3)
-say("5.7      retuned_smote - deployed", tost_paired(arms.retuned_smote, arms.deployed)["mean"], 0.0238)
-say("5.7      weighted - retuned_smote", tost_paired(arms.retuned_weighted, arms.retuned_smote)["mean"], 0.0183)
+say("5.7      retuned_smote - deployed", tost_paired(arms.retuned_smote, arms.deployed)["mean"], 0.0341)
+say("5.7      weighted - retuned_smote", tost_paired(arms.retuned_weighted, arms.retuned_smote)["mean"], 0.0102)
 
 # ===== BLOCK J - 6.7 / 6.8 fee proxy recoverable from engagement ==============
 eng3 = ["n_logins", "n_module_views", "engagement_span_days"]
@@ -366,23 +369,34 @@ for s in SPLITS20:
     a, b_, ya, yb_ = train_test_split(df[eng3], df.fee_payment_status, test_size=0.20,
                                       stratify=df.fee_payment_status, random_state=s)
     bals.append(balanced_accuracy_score(yb_, DecisionTreeClassifier(max_depth=3, random_state=s).fit(a, ya).predict(b_)))
-say("6.7      depth-3 tree, unpaid vs paid AUC", np.mean(aucs), 0.712, 3)
-say("6.7      three-level balanced accuracy", np.mean(bals), 0.460, 3)
+say("6.7      depth-3 tree, unpaid vs paid AUC", np.mean(aucs), 0.716, 3)
+say("6.7      three-level balanced accuracy", np.mean(bals), 0.439, 3)
 
-# ===== BLOCK K - 5.14 timings (put the printed values in 5.14) ===============
+# ===== BLOCK K - 5.14 timings, measured as Section 5.14 states ===============
+# 5.14 says: minimum of three repeats per seed, then the median across the five
+# fixed seeds. The minimum is used because contention on a shared runtime can
+# only add time. The committed run is the run of record: do not chase an
+# earlier number, and copy these six values straight into 5.14.
 Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.20, stratify=y, random_state=42)
+tim = {}
 for name, cols in CONFIGS.items():
-    ts_ = []
+    per_seed = []
     for s in SEEDS5:
-        t0 = time.perf_counter(); fit(Xtr, ytr, cols, s); ts_.append(time.perf_counter() - t0)
-    say(f"5.14     fit seconds, {name}", np.mean(ts_), {"full": 3.19, "pruned": 1.93, "deployed": 1.89}[name], 2)
-tracemalloc.start(); sc, m = fit(Xtr, ytr, deployed_cols, 42); peak = tracemalloc.get_traced_memory()[1]; tracemalloc.stop()
-say("5.14     peak allocation MB (deployed fit)", peak / 1e6, 3.3, 1)
-A = sc.transform(Xte[deployed_cols]); t0 = time.perf_counter(); m.predict_proba(A); t1 = time.perf_counter()
-say("5.14     inference microseconds per record", (t1 - t0) / len(A) * 1e6, 9.8, 1)
-t0 = time.perf_counter(); m.get_booster().predict(xgb.DMatrix(A), pred_contribs=True); t1 = time.perf_counter()
-say("5.14     SHAP ms per record", (t1 - t0) / len(A) * 1e3, 0.73, 2)
-print("NOTE: timings vary by machine. Report what you GOT and name the runtime.")
+        reps = []
+        for _ in range(3):
+            t0 = time.perf_counter(); fit(Xtr, ytr, cols, s); reps.append(time.perf_counter() - t0)
+        per_seed.append(min(reps))
+    tim[f"fit_s_{name}"] = round(float(np.median(per_seed)), 2)
+tracemalloc.start(); sc, m = fit(Xtr, ytr, deployed_cols, 42)
+tim["peak_mb_deployed_fit"] = round(tracemalloc.get_traced_memory()[1] / 1e6, 1); tracemalloc.stop()
+A = sc.transform(Xte[deployed_cols])
+t0 = time.perf_counter(); m.predict_proba(A)
+tim["inference_us_per_record"] = round((time.perf_counter() - t0) / len(A) * 1e6, 1)
+t0 = time.perf_counter(); m.get_booster().predict(xgb.DMatrix(A), pred_contribs=True)
+tim["shap_ms_per_record"] = round((time.perf_counter() - t0) / len(A) * 1e3, 2)
+json.dump(tim, open("outputs/timings_5_14.json", "w"), indent=2)
+LOG["5.14     timings of record"] = dict(got=tim, paper=None, differs=False)
+print("5.14 timings of record:", tim)
 
 # ===== BLOCK L - 6.8 total_score redundancy TOST ==============================
 no_total = [c for c in deployed_cols if c != "total_score"]

@@ -25,6 +25,10 @@ OULAD_SEED42 = "outputs/oulad_seed42_predictions.csv"  # y_true, proba_full/prun
 OULAD_SEEDS  = "outputs/oulad_per_seed_metrics.csv"    # config, seed, auc
 TRANSFER     = "outputs/transfer_matched_ceiling.csv"  # seed, zero_shot, matched_ceiling
 CV55         = "outputs/repeated_cv55.csv"             # config, fold, auc
+FAIRCOUNTS   = "outputs/fairness_counts_5_4.csv"       # 5.4 fallback, committed
+EDUAGG       = "outputs/educator_aggregates.csv"       # 5.1/5.8/5.9 fallback, committed
+RETUNE       = "outputs/complete_record_retune.json"   # 5.7 re-tune winner
+TIMINGS      = "outputs/timings_5_14.json"             # 5.14 timings of record
 
 COL_CONFIG, COL_SEED, COL_AUC = "config", "seed", "auc"
 SPLITS20 = [42, 0, 123, 2024, 7] + list(range(100, 115))   # Section 4.8
@@ -33,7 +37,7 @@ TOL = 0.0006          # the paper reports three decimals
 ALLOW_SKIP = False    # set True only to run a partial gate; a skip still blocks a tag
 # -------------------------------------------------------------------------
 
-fails, passes, skips = [], [], []
+fails, passes, skips, locals_ = [], [], [], []
 
 
 def check(label, got, want, tol=TOL):
@@ -48,6 +52,22 @@ def check_eq(label, got, want):
 
 def block_skipped(label, exc):
     skips.append(f"{label:54s} {type(exc).__name__}: {exc}")
+
+
+def block_local(label, reason):
+    """The private input is absent, so this block was verified against a
+    committed group-level aggregate instead of re-derived from source.
+    Its checks still count, but the run may not be tagged from."""
+    locals_.append(f"{label:54s} verified from committed aggregate ({reason})")
+
+
+def agg_lookup(frame, section, measure, group, statistic):
+    m = ((frame["section"].astype(str) == section)
+         & (frame["measure"].astype(str) == measure)
+         & (frame["group"].astype(str) == (group or ""))
+         & (frame["statistic"].astype(str) == statistic))
+    v = frame.loc[m, "value"]
+    return float(v.iloc[0]) if len(v) == 1 else None
 
 
 def mean_over(df, cfg, seeds):
@@ -158,7 +178,31 @@ try:
     check("5.5      precision at tau = 0.0833",
           float(s42["y_true"].values[yhat == 1].mean()), 0.484, 0.002)
 except Exception as e:
-    block_skipped("seed-42 predictions unreadable", e)
+    # F2 fallback: fairness_counts_5_4.csv re-derives 11 of the 12 entries.
+    # The twelfth, the tau-versus-0.5 comparison, needs per-record scores.
+    try:
+        fc = pd.read_csv(FAIRCOUNTS)
+        fee = fc[fc["attribute"] == "fee_status"]
+        for cfg, want_gap in (("pruned", 0.490), ("deployed", 0.385)):
+            sub = fee[fee["configuration"] == cfg]
+            rec = dict(zip(sub["group"], sub["recall"].astype(float)))
+            check(f"5.4      EO gap, {cfg} (from counts)",
+                  max(rec.values()) - min(rec.values()), want_gap, 0.0015)
+            for grp, want in (("Paid", {"pruned": 0.316, "deployed": 0.421}[cfg]),
+                              ("Partial", {"pruned": 0.481, "deployed": 0.519}[cfg]),
+                              ("Unpaid", 0.806)):
+                check(f"5.4      {cfg} recall, {grp.lower()} (from counts)",
+                      rec.get(grp), want, 0.0015)
+        dep = fee[fee["configuration"] == "deployed"]
+        tp = float(dep["n_at_risk_flagged"].sum())
+        fp = float(dep["n_not_at_risk_flagged"].sum())
+        check("4.4      true positives at tau = 0.0833 (from counts)", tp, 76.0, 0.5)
+        check("4.4      deployed recall at tau = 0.0833 (from counts)",
+              tp / float(dep["n_at_risk"].sum()), 0.673, 0.002)
+        check("5.5      precision at tau = 0.0833 (from counts)", tp / (tp + fp), 0.484, 0.002)
+        block_local("5.4      fairness audit", "seed-42 predictions absent")
+    except Exception as e2:
+        block_skipped("seed-42 predictions unreadable", e2)
 
 # ---- 3. 5.13, the adaptation budgets ------------------------------------
 try:
@@ -317,7 +361,59 @@ try:
         f"{'5.1      imbalance does not explain the 5.8 trust gap':54s} "
         f"rho {_rhoA:+.3f} / {_rhoB:+.3f}")
 except Exception as e:
-    block_skipped("5.8      educator responses unreadable", e)
+    # F2 fallback: educator_aggregates.csv carries the group-level statistics
+    # that Sections 4.9, 4.12, 5.1, 5.8 and 5.9 report. No participant codes,
+    # no free text, no role or years at row level.
+    try:
+        ea = pd.read_csv(EDUAGG, keep_default_na=False, na_filter=False)
+        ea["value"] = ea["value"].astype(float)
+        WANT = [
+            ("4.9",  "trust_alpha_raw",      "",  "alpha",    0.788, 0.003),
+            ("4.9",  "trust_alpha_recoded",  "",  "alpha",    0.718, 0.003),
+            ("4.9",  "alpha_C",              "",  "alpha",    0.80,  0.006),
+            ("4.9",  "alpha_A",              "",  "alpha",    0.82,  0.006),
+            ("4.9",  "alpha_U",              "",  "alpha",    0.88,  0.006),
+            ("4.9",  "alpha_E",              "",  "alpha",    0.90,  0.006),
+            ("4.12", "prior_ai_use",         "",  "answered", 39.0,  0.5),
+            ("5.8",  "trust",                "A", "mean",     2.82,  0.006),
+            ("5.8",  "trust",                "B", "mean",     3.55,  0.006),
+            ("5.8",  "trust",                "A", "n",        19.0,  0.5),
+            ("5.8",  "trust",                "B", "n",        20.0,  0.5),
+            ("5.8",  "trust",                "",  "U",        305.0, 0.5),
+            ("5.8",  "trust",                "",  "p",        0.001, 0.0006),
+            ("5.8",  "trust",                "",  "r",        0.61,  0.006),
+            ("5.9",  "intervention_quality", "",  "U",        231.0, 0.5),
+            ("5.9",  "intervention_quality", "",  "p",        0.249, 0.0015),
+            ("5.1",  "role",                 "",  "chi2",     5.58,  0.02),
+            ("5.1",  "experience",           "",  "usable",   33.0,  0.5),
+            ("5.1",  "experience",           "A", "n",        16.0,  0.5),
+            ("5.1",  "experience",           "B", "n",        17.0,  0.5),
+            ("5.1",  "experience",           "A", "median",   2.0,   0.01),
+            ("5.1",  "experience",           "B", "median",   4.0,   0.01),
+            ("5.1",  "experience",           "",  "U",        211.5, 0.5),
+            ("5.1",  "experience",           "",  "r",        0.555, 0.005),
+            ("5.1",  "experience_vs_trust",  "A", "rho",     -0.137, 0.01),
+            ("5.1",  "experience_vs_trust",  "B", "rho",      0.024, 0.01),
+            ("5.1",  "experience_word_as_zero", "", "U",      212.0, 0.5),
+            ("5.1",  "experience_word_as_zero", "", "r",      0.472, 0.005),
+            ("5.1",  "experience_vs_trust_word_as_zero", "B", "rho", 0.182, 0.01),
+        ]
+        for sec, meas, grp, stat, want, tol in WANT:
+            check(f"{sec:8s} {meas} {grp} {stat} (from aggregates)".rstrip(),
+                  agg_lookup(ea, sec, meas, grp, stat), want, tol)
+        _ra = agg_lookup(ea, "4.9", "trust_alpha_raw", "", "alpha")
+        _rc = agg_lookup(ea, "4.9", "trust_alpha_recoded", "", "alpha")
+        (passes if (_ra is not None and _rc is not None and _rc < _ra) else fails).append(
+            f"{'4.9      recoding lowers alpha (from aggregates)':54s} {_ra} -> {_rc}")
+        _rhoA = agg_lookup(ea, "5.1", "experience_vs_trust", "A", "rho")
+        _rhoB = agg_lookup(ea, "5.1", "experience_vs_trust", "B", "rho")
+        (passes if (_rhoA is not None and _rhoB is not None
+                    and abs(_rhoA) < 0.3 and abs(_rhoB) < 0.3) else fails).append(
+            f"{'5.1      imbalance does not explain 5.8 (aggregates)':54s} "
+            f"rho {_rhoA} / {_rhoB}")
+        block_local("5.8      educator study", "raw responses absent")
+    except Exception as e2:
+        block_skipped("5.8      educator responses unreadable", e2)
 
 # ---- 6. 5.12, the OULAD replication -------------------------------------
 try:
@@ -358,7 +454,10 @@ try:
     check("5.13     zero-shot mean AUC",        float(zs.mean()),   0.642, 0.0015)
     check("5.13     zero-shot SD",              float(zs.std(ddof=1)), 0.047, 0.0015)
     check("5.13     matched nine-column ceiling", float(ceil.mean()), 0.926, 0.0015)
-    check("5.13     matched ceiling SD",        float(ceil.std(ddof=1)), 0.001, 0.0015)
+    # m1: the run gives SD 0.00048, which rounds to 0.000. The paper now says
+    # "0.926 (SD < 0.001)", so the gate asserts the bound, not a rounded value.
+    (passes if float(ceil.std(ddof=1)) < 0.001 else fails).append(
+        f"{'5.13     matched ceiling SD below 0.001':54s} got {ceil.std(ddof=1):.5f}")
     check("5.13     matched transfer gap",      float(ceil.mean() - zs.mean()), 0.284, 0.0015)
     # the ceiling must NOT be the 0.937 full-schema figure the old notebooks used
     (passes if abs(float(ceil.mean()) - 0.937) > 0.005 else fails).append(
@@ -370,13 +469,36 @@ except Exception as e:
 # ---- 8. 4.11, the 5x5 repeated cross-validation variance check ----------
 try:
     cv = pd.read_csv(CV55)
-    for cfg, want in (("full", 0.865), ("pruned", 0.869), ("deployed", 0.858)):
+    for cfg, want in (("full", 0.864), ("pruned", 0.868), ("deployed", 0.858)):
         s = cv[cv[COL_CONFIG] == cfg][COL_AUC]
         check(f"4.11     5x5 CV mean AUC, {cfg}",
               float(s.mean()) if len(s) == 25 else None, want, 0.0015)
     check("4.11     5x5 CV fold count", float(len(cv)), 75.0, 0.5)
 except Exception as e:
     block_skipped("4.11     repeated-CV outputs unreadable", e)
+
+# ---- 8b. 5.7, the complete-record re-tune winner (F3) -------------------
+# Table S4 row 3 and Section 5.7 rest on a 40-draw seeded search. Without the
+# saved winner nothing in the repository records which configuration ran.
+try:
+    rt = json.load(open(RETUNE))["best_params"]
+    check_eq("S4       re-tune winner matches Table S4 row 3",
+             (rt["max_depth"], rt["n_estimators"], rt["learning_rate"], rt["subsample"],
+              rt["colsample_bytree"], rt["min_child_weight"], rt["reg_lambda"]),
+             (2, 600, 0.01, 0.7, 0.8, 10, 20))
+except Exception as e:
+    block_skipped("S4       re-tune record missing", e)
+
+# ---- 8c. 5.14, the timings of record (F4) -------------------------------
+# 5.14 must quote the committed run, not one of the three sets that disagreed.
+try:
+    tm = json.load(open(TIMINGS))
+    for key, want in (("fit_s_full", 2.12), ("fit_s_pruned", 1.46),
+                      ("fit_s_deployed", 1.43), ("peak_mb_deployed_fit", 2.8),
+                      ("inference_us_per_record", 11.3), ("shap_ms_per_record", 0.80)):
+        check(f"5.14     {key}", float(tm[key]), want, 0.005)
+except Exception as e:
+    block_skipped("5.14     timings of record missing", e)
 
 # ---- 9. no mock-data fallback, and no unseeded randomness ---------------
 # Seeded RNG is legitimate: the bootstrap intervals in 5.4 and 5.12 use
@@ -408,7 +530,11 @@ for line in skips:
 for line in fails:
     print("  FAIL  " + line)
 print("=" * 82)
-print(f"{len(passes)} passed, {len(fails)} failed, {len(skips)} skipped")
+for line in locals_:
+    print("  LOCAL " + line)
+print("=" * 82)
+print(f"{len(passes)} passed, {len(fails)} failed, {len(skips)} skipped, "
+      f"{len(locals_)} local-only")
 
 if fails:
     print("\nDo not tag this commit. Fix the failures or correct the manuscript.")
@@ -417,4 +543,13 @@ if skips and not ALLOW_SKIP:
     print("\nDo not tag this commit. A skipped block is an unverified claim.")
     print("Produce the missing outputs, or set ALLOW_SKIP = True and say so in the README.")
     sys.exit(2)
-print("\nSafe to tag. Record this commit hash in the title page and Sections 4.15 and 7.")
+if locals_:
+    print("\nEvery reported figure was verified, but the blocks marked LOCAL were")
+    print("checked against committed aggregates rather than re-derived from the")
+    print("private inputs. This is the expected result on a clone. Tag only from a")
+    print("run where data_local/ and the local output files are present.")
+    print(f"Not safe to tag from this run. ({len(fails)} failed, {len(skips)} skipped, "
+          f"{len(locals_)} local-only)")
+    sys.exit(3)
+print("\nRecord this commit hash in the title page and Sections 4.15 and 7.")
+print(f"Safe to tag. ({len(fails)} failed, {len(skips)} skipped, {len(locals_)} local-only)")

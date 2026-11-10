@@ -1,0 +1,8 @@
+{
+  "fit_s_full": 2.12,
+  "fit_s_pruned": 1.46,
+  "fit_s_deployed": 1.43,
+  "peak_mb_deployed_fit": 2.8,
+  "inference_us_per_record": 11.3,
+  "shap_ms_per_record": 0.8
+}
