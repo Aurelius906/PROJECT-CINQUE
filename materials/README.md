@@ -21,9 +21,11 @@ are therefore design artefacts, not evidence of a paper administration.
 It is now the Humanities and Social Sciences Research Ethics Committee (HuSSREC), which
 is the name used in the manuscript and on the title page. The two refer to the same body.
 
-**Answer key.** Section 5 of the protocol contains the per-case answer key used to score
-intervention quality. It is published here deliberately: the quality scores cannot be
-checked without it. Data collection is complete, so nothing is compromised by releasing it.
+**Answer key.** The facilitator protocol carries a "Confidential — facilitator copy
+(contains the answer key)" banner. That banner applied while the study was running.
+Section 5 of the protocol holds the per-case answer key used to score intervention
+quality, and it is published here deliberately now that collection has closed: the
+scoring that Sections 4.13 and 5.9 rest on cannot be checked without it.
 
 **Hypotheses.** The Analysis Guide states directional hypotheses for trust, competence and
 autonomy. All results in the manuscript are reported two-sided regardless, which is the
@@ -33,5 +35,6 @@ conservative choice and does not rely on the direction stated here (Section 4.10
 
 Raw educator responses, the open-ended coding sheet, and the intervention-quality
 reconciliation record are not published. They contain participants' verbatim free text and
-are bound by the consent given. The aggregate outcomes they support are in `outputs/`,
-and the acceptance gate re-derives every reported figure from those.
+are bound by the consent given. The group-level results they support are committed as
+`outputs/educator_aggregates.csv`, and the acceptance gate checks the reported figures
+against them.
