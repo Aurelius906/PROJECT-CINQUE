@@ -12,10 +12,10 @@ and the manuscript disagree, the script is correct and the manuscript is wrong.
 | # | Script | Produces |
 |---|---|---|
 | 1 | `Code/rerun_pruning_v3_original_protocol.py` | 4.4, 4.6, 5.4, Figure S3, the deployed bundle |
-| 2 | `Code/G8_FIX_01_source_outputs.py` | 4.2, 4.6, 4.7, 4.11, 5.2–5.7, 5.14 |
+| 2 | `Code/G8_FIX_01_source_outputs.py` | 4.2, 4.6, 4.7, 4.11, 4.13, 5.2–5.7, 5.14 |
 | 3 | `Code/Oulad_exp.ipynb`, then `Code/G8_FIX_02_verify_oulad.py` | 4.16, 5.12, Table 4, Table S9 |
 | 4 | `Code/RetTransUst.ipynb`, then `Code/G8_FIX_03_*.py` | 4.17, 5.13, Figure 5, Table S10 |
-| 5 | `Code/analyze_trust_study.py`, then `Code/G8_FIX_04_*.py` | 4.9, 4.13, 5.8–5.10 |
+| 5 | `Code/analyze_trust_study.py`, then `Code/G8_FIX_04_*.py` | 4.9, 4.10, 4.12, 5.1, 5.8–5.10 |
 | 6 | `Code/acceptance_gate.py` | checks every reported number against `outputs/` |
 | 7 | `Code/G8_M3_release.py` | assembles `RELEASE/` locally (not committed) |
 
